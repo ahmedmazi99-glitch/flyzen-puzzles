@@ -146,7 +146,7 @@
         
         <div id="puzzle-grid">
             <div style="grid-column: span 3; grid-row: span 3; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
-                Loading... ✈️
+                Loading Flyzen's Sky... ✈️
             </div>
         </div>
 
@@ -161,14 +161,19 @@
         </div>
     </div>
 
+    <!-- Hidden source element to force browser image tracking -->
+    <img id="secret-source" style="display:none;" />
+
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const imageName = urlParams.get('img') || 'puzzle1.png';
 
         const grid = document.getElementById('puzzle-grid');
+        const hiddenImg = document.getElementById('secret-source');
+        
         let currentOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8];
         let selectedIndex = null;
-        let img = new Image();
+        let isLoaded = false;
 
         function playSound(freq, duration = 0.08) {
             try {
@@ -186,20 +191,32 @@
             } catch(e) {}
         }
 
-        img.onerror = () => {
+        function initGame() {
+            if (isLoaded) return;
+            isLoaded = true;
+            shuffleTiles();
+        }
+
+        hiddenImg.onerror = () => {
             grid.innerHTML = `
                 <div class="error-msg">
-                    <b>⚠️ Image Not Found!</b><br>
-                    Could not load "${imageName}".<br>
-                    Make sure it is uploaded in GitHub.
+                    <b>⚠️ Image File Missing!</b><br><br>
+                    Could not find <code>"${imageName}"</code> in repository root.<br>
+                    Check filename casing and extension!
                 </div>`;
         };
 
-        img.onload = () => {
-            shuffleTiles();
+        hiddenImg.onload = () => {
+            initGame();
         };
 
-        img.src = imageName;
+        // Start loading
+        hiddenImg.src = imageName;
+
+        // Force trigger if browser served image from cache
+        if (hiddenImg.complete && hiddenImg.naturalWidth !== 0) {
+            initGame();
+        }
 
         function renderGrid() {
             grid.innerHTML = '';
@@ -207,7 +224,6 @@
                 const tile = document.createElement('div');
                 tile.className = 'tile' + (selectedIndex === index ? ' selected' : '');
                 
-                // Calculate position of original slice
                 const origCol = pieceId % 3;
                 const origRow = Math.floor(pieceId / 3);
                 
@@ -228,7 +244,6 @@
                 selectedIndex = null;
                 renderGrid();
             } else {
-                // Swap pieces
                 const temp = currentOrder[selectedIndex];
                 currentOrder[selectedIndex] = currentOrder[index];
                 currentOrder[index] = temp;
