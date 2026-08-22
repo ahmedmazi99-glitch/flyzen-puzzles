@@ -32,9 +32,12 @@
             border-radius: 32px;
             padding: 25px 20px;
             box-shadow: 0 20px 50px rgba(0, 40, 90, 0.3);
-            max-width: 450px;
+            max-width: 520px;
             width: 100%;
             border: 6px solid #FFD166;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .badge {
@@ -53,12 +56,8 @@
         p { color: #64748B; font-size: 15px; margin: 0 0 20px 0; }
 
         #puzzle-grid {
-            width: 360px;
-            height: 360px;
             margin: 0 auto;
             display: grid;
-            grid-template-columns: repeat(3, 120px);
-            grid-template-rows: repeat(3, 120px);
             gap: 0;
             background: #ffffff;
             border: 4px solid #38BDF8;
@@ -69,11 +68,8 @@
         }
 
         .tile {
-            width: 120px;
-            height: 120px;
-            background-size: 360px 360px;
             cursor: pointer;
-            box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.8), inset 0 0 0 3px rgba(0, 0, 0, 0.15);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6), inset 0 0 0 2px rgba(0, 0, 0, 0.12);
             transition: transform 0.12s ease, filter 0.12s ease;
             position: relative;
         }
@@ -126,13 +122,6 @@
         }
 
         .error-msg {
-            grid-column: span 3;
-            grid-row: span 3;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: #FFE4E6;
             color: #E11D48;
             padding: 20px;
             font-size: 14px;
@@ -147,7 +136,7 @@
         <p>Click two pieces to swap them and complete the picture!</p>
         
         <div id="puzzle-grid">
-            <div style="grid-column: span 3; grid-row: span 3; display: flex; align-items: center; justify-content: center; color: #0284C7; font-weight: bold;">
+            <div id="loading-box" style="padding: 40px; color: #0284C7; font-weight: bold;">
                 Loading Flyzen's Sky... ✈️
             </div>
         </div>
@@ -175,6 +164,10 @@
         let currentOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8];
         let selectedIndex = null;
         let isLoaded = false;
+        let puzzleW = 360;
+        let puzzleH = 470;
+        let pieceW = 120;
+        let pieceH = 156;
 
         function playSound(freq, duration = 0.08) {
             try {
@@ -192,9 +185,28 @@
             } catch(e) {}
         }
 
+        function setupDimensions() {
+            // Respect full image ratio (8.625 x 11.25)
+            const aspectRatio = hiddenImg.naturalHeight / hiddenImg.naturalWidth;
+            const maxW = Math.min(window.innerWidth - 60, 420);
+            
+            // Calculate exact sizes divisible by 3
+            pieceW = Math.floor(maxW / 3);
+            puzzleW = pieceW * 3;
+            
+            pieceH = Math.floor((puzzleW * aspectRatio) / 3);
+            puzzleH = pieceH * 3;
+
+            grid.style.width = puzzleW + 'px';
+            grid.style.height = puzzleH + 'px';
+            grid.style.gridTemplateColumns = `repeat(3, ${pieceW}px)`;
+            grid.style.gridTemplateRows = `repeat(3, ${pieceH}px)`;
+        }
+
         function initGame() {
             if (isLoaded) return;
             isLoaded = true;
+            setupDimensions();
             shuffleTiles();
         }
 
@@ -225,8 +237,11 @@
                 const origCol = pieceId % 3;
                 const origRow = Math.floor(pieceId / 3);
                 
+                tile.style.width = pieceW + 'px';
+                tile.style.height = pieceH + 'px';
                 tile.style.backgroundImage = `url('${imageName}')`;
-                tile.style.backgroundPosition = `-${origCol * 120}px -${origRow * 120}px`;
+                tile.style.backgroundSize = `${puzzleW}px ${puzzleH}px`;
+                tile.style.backgroundPosition = `-${origCol * pieceW}px -${origRow * pieceH}px`;
 
                 tile.onclick = () => handleTileClick(index);
                 grid.appendChild(tile);
