@@ -54,15 +54,17 @@
             letter-spacing: 0.5px;
         }
 
-        h1 { color: #1E293B; font-size: 22px; margin: 0 0 6px 0; }
+        h1 { color: #1E293B; font-size: 20px; margin: 0 0 6px 0; }
         
         .game-info {
             display: flex;
-            gap: 15px;
-            font-size: 14px;
+            gap: 10px;
+            font-size: 12px;
             font-weight: 700;
             color: #0284C7;
             margin-bottom: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .diff-selector {
@@ -179,6 +181,7 @@
         
         <div class="game-info" id="gameInfo">
             <span id="timer">⏱️ 00:00</span>
+            <span id="bestTime">🏆 Best: --:--</span>
             <span id="movesCount">👆 Moves: 0</span>
         </div>
 
@@ -193,7 +196,7 @@
         <div id="winBox" class="win-box">
             <h2 style="color: #FF477E; margin: 0; font-size: 20px;">🎉 SUPER PILOT WIN! 🎉</h2>
             <div class="stars" id="starRating">⭐⭐⭐</div>
-            <p id="winStats" style="color: #0F766E; margin: 0; font-size: 13px; font-weight: bold;"></p>
+            <div id="winStats" style="color: #0F766E; margin: 0; font-size: 13px; font-weight: bold;"></div>
         </div>
 
         <div class="btn-group" id="btnGroup">
@@ -213,12 +216,25 @@
             localStorage.setItem('unlocked_level_1', 'true');
         }
 
+        // قائمة أسماء المستويات المخصصة لـ Flyzen
+        const levelTitles = {
+            1: "Sky Explorer ✈️",
+            2: "Cloud Navigator ☁️",
+            3: "Jet Speedster 🚀",
+            4: "Star Aviator 🌟",
+            5: "Galaxy Captain 👨‍✈️"
+        };
+
+        const titleName = levelTitles[currentLevel] || "Sky Puzzle ✈️";
+        document.getElementById('levelTitle').innerText = `Level ${currentLevel}: ${titleName}`;
+
         const grid = document.getElementById('puzzle-grid');
         const hiddenImg = document.getElementById('secret-source');
         const winBox = document.getElementById('winBox');
         const nextBtn = document.getElementById('nextBtn');
         const actionBtn = document.getElementById('actionBtn');
         const timerEl = document.getElementById('timer');
+        const bestEl = document.getElementById('bestTime');
         const movesEl = document.getElementById('movesCount');
         const gameInfo = document.getElementById('gameInfo');
         const diffSelector = document.getElementById('diffSelector');
@@ -229,9 +245,6 @@
         let moves = 0;
         let timerInterval = null;
         let secondsPassed = 0;
-        let isLoaded = false;
-
-        document.getElementById('levelTitle').innerText = `Level ${currentLevel}: Sky Puzzle ✈️`;
 
         function playSound(freq, duration = 0.08) {
             try {
@@ -276,6 +289,19 @@
             return true;
         }
 
+        function updateBestTimeDisplay() {
+            const storageKey = `best_time_lvl_${currentLevel}_grid_${gridSize}`;
+            const savedBest = localStorage.getItem(storageKey);
+
+            if (savedBest) {
+                const m = String(Math.floor(savedBest / 60)).padStart(2, '0');
+                const s = String(savedBest % 60).padStart(2, '0');
+                bestEl.innerText = `🏆 Best: ${m}:${s}`;
+            } else {
+                bestEl.innerText = `🏆 Best: --:--`;
+            }
+        }
+
         function startTimer() {
             clearInterval(timerInterval);
             secondsPassed = 0;
@@ -312,6 +338,7 @@
             setupGridCSS();
             currentOrder = Array.from({length: gridSize * gridSize}, (_, i) => i);
             shuffleTiles();
+            updateBestTimeDisplay();
         }
 
         hiddenImg.onerror = () => {
@@ -408,11 +435,27 @@
                 
                 localStorage.setItem(`unlocked_level_${currentLevel + 1}`, 'true');
 
+                const storageKey = `best_time_lvl_${currentLevel}_grid_${gridSize}`;
+                const savedBest = localStorage.getItem(storageKey);
+                let isNewRecord = false;
+
+                if (!savedBest || secondsPassed < parseInt(savedBest)) {
+                    localStorage.setItem(storageKey, secondsPassed);
+                    isNewRecord = true;
+                    updateBestTimeDisplay();
+                }
+
                 setTimeout(() => {
                     playSound(800, 0.3);
                     confetti({ particleCount: 130, spread: 85, origin: { y: 0.6 } });
                     document.getElementById('starRating').innerText = calculateStars();
-                    document.getElementById('winStats').innerText = `Time: ${secondsPassed}s | Moves: ${moves}`;
+                    
+                    let statsHTML = `Time: ${secondsPassed}s | Moves: ${moves}`;
+                    if (isNewRecord) {
+                        statsHTML = `<div style="color: #D97706; font-size: 14px; margin-bottom: 4px;">👑 NEW RECORD! 👑</div>` + statsHTML;
+                    }
+
+                    document.getElementById('winStats').innerHTML = statsHTML;
                     winBox.style.display = 'block';
                     nextBtn.style.display = 'inline-block';
                 }, 200);
