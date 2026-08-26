@@ -217,6 +217,9 @@
         const userKey = urlParams.get('key');
         const imageName = urlParams.get('img') || `puzzle${currentLevel}.jpg`;
 
+        // كلمة السر الخاصة بك كمبرمج للدخول لأي مستوى
+        const DEV_MASTER_KEY = "الفا مايك1995";
+
         // إعدادات المستويات والرمز السري ورقم الصفحة التالية للعودة للكتاب
         const levelSecurity = {
             1: { key: "sky1", nextPage: 13, title: "Sky Explorer ✈️" },
@@ -264,14 +267,20 @@
         }
 
         function checkLevelAccess() {
+            // 1. السماح المباشر للمبرمج باستخدام كلمة السر الخاصة بك
+            if (userKey === DEV_MASTER_KEY) {
+                return true;
+            }
+
+            // 2. التحقق من دخول الطفل عبر الكتاب المطبوع أو النسخة الرقمية
             if (!currentConfig || userKey !== currentConfig.key) {
                 grid.style.display = 'block';
                 grid.innerHTML = `
                     <div style="padding: 35px 15px; text-align: center;">
                         <div style="font-size: 48px; margin-bottom: 10px;">📖🔒</div>
-                        <h2 style="color: #1E293B; margin: 0 0 8px 0; font-size: 20px;">Scan From Book Required!</h2>
+                        <h2 style="color: #1E293B; margin: 0 0 8px 0; font-size: 20px;">Book Access Required!</h2>
                         <p style="color: #64748B; font-size: 14px; margin: 0; line-height: 1.4;">
-                            Please scan the QR code directly from your <b>Flyzen Activity Book</b> to play this level! ✈️
+                            Please scan the QR code from your printed book or click the link in your PDF! ✈️
                         </p>
                     </div>
                 `;
