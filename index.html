@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Flyzen's Puzzle Challenge!✈️🧩</title>
+    <title>Flyzen's Sky Puzzle Challenge! ✈️🧩</title>
     
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
@@ -213,14 +213,15 @@
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        const passToken = urlParams.get('p');
+        // تحويل الأحرف إلى صغيرة تلقائيًا لتفادي مشكلة A8f3k مقابل a8f3k
+        const passToken = urlParams.get('p') ? urlParams.get('p').toLowerCase() : null;
         const userKey = urlParams.get('key');
         const DEV_MASTER_KEY = "alpha1995";
 
         // خريطة الهاش العشوائي غير القابل للتخمين
         const secureDatabase = {
-            "a8f3k": { level: 1, img: "puzzle1.jpg", title: "FLYZEN IN HIS ROOM " },
-            "m2p9x": { level: 2, img: "puzzle2.jpg", title: "FLYZEN FIRST TIME IN THE HANGAR" },
+            "a8f3k": { level: 1, img: "puzzle1.jpg", title: "Sky Explorer ✈️" },
+            "m2p9x": { level: 2, img: "puzzle2.jpg", title: "Cloud Navigator ☁️" },
             "r7v1q": { level: 3, img: "puzzle3.jpg", title: "Jet Speedster 🚀" },
             "x4b8w": { level: 4, img: "puzzle4.jpg", title: "Star Aviator 🌟" },
             "e9t2z": { level: 5, img: "puzzle5.jpg", title: "Galaxy Captain 👨‍✈️" }
@@ -411,6 +412,8 @@
         function shuffleTiles() {
             grid.classList.remove('solved');
             winBox.style.display = 'none';
+            actionBtn.innerText = '🔄 Shuffle';
+            actionBtn.style.display = 'block';
             moves = 0;
             movesEl.innerText = `👆 Moves: 0`;
             
@@ -460,7 +463,8 @@
 
                     document.getElementById('winStats').innerHTML = statsHTML;
                     winBox.style.display = 'block';
-                    actionBtn.style.display = 'none';
+                    actionBtn.innerText = '🔄 Play Again';
+                    actionBtn.style.display = 'block';
                 }, 200);
             }
         }
