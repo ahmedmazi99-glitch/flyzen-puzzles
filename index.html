@@ -217,12 +217,13 @@
         const userKey = urlParams.get('key');
         const imageName = urlParams.get('img') || `puzzle${currentLevel}.jpg`;
 
+        // إعدادات المستويات والرمز السري ورقم الصفحة التالية للعودة للكتاب
         const levelSecurity = {
-            1: { key: "sky1", nextPage: 8, title: "Sky Explorer ✈️" },
-            2: { key: "cloud2", nextPage: 12, title: "Cloud Navigator ☁️" },
-            3: { key: "jet3", nextPage: 16, title: "Jet Speedster 🚀" },
-            4: { key: "star4", nextPage: 20, title: "Star Aviator 🌟" },
-            5: { key: "galaxy5", nextPage: 24, title: "Galaxy Captain 👨‍✈️" }
+            1: { key: "sky1", nextPage: 13, title: "Sky Explorer ✈️" },
+            2: { key: "cloud2", nextPage: 17, title: "Cloud Navigator ☁️" },
+            3: { key: "jet3", nextPage: 21, title: "Jet Speedster 🚀" },
+            4: { key: "star4", nextPage: 25, title: "Star Aviator 🌟" },
+            5: { key: "galaxy5", nextPage: 29, title: "Galaxy Captain 👨‍✈️" }
         };
 
         const grid = document.getElementById('puzzle-grid');
