@@ -197,9 +197,9 @@
             <div class="stars" id="starRating">⭐⭐⭐</div>
             <div id="winStats" style="color: #0F766E; margin: 5px 0; font-size: 13px; font-weight: bold;"></div>
             
-            <div style="background: #FFF9DB; border: 2px dashed #F59E0B; border-radius: 12px; padding: 10px; margin-top: 10px;">
-                <p style="color: #78350F; font-size: 14px; margin: 0; font-weight: bold;">
-                    📖 Open Page <span id="nextPageNum" style="color: #E11D48; font-size: 18px;">X</span> in your book to continue Flyzen's story!
+            <div style="background: #FFF9DB; border: 2px dashed #F59E0B; border-radius: 12px; padding: 12px; margin-top: 10px;">
+                <p style="color: #78350F; font-size: 14px; margin: 0; font-weight: bold; line-height: 1.5;">
+                    ✈️ Head back to your book and solve the activities to unlock the next level!
                 </p>
             </div>
         </div>
@@ -217,24 +217,23 @@
         const userKey = urlParams.get('key');
         const DEV_MASTER_KEY = "admin";
 
-        // خريطة الهاش العشوائي غير القابل للتخمين مطلقًا
+        // خريطة الهاش العشوائي غير القابل للتخمين
         const secureDatabase = {
-            "a8f3k": { level: 1, nextPage: 13, img: "puzzle1.jpg", title: "Sky Explorer ✈️" },
-            "m2p9x": { level: 2, nextPage: 17, img: "puzzle2.jpg", title: "Cloud Navigator ☁️" },
-            "r7v1q": { level: 3, nextPage: 21, img: "puzzle3.jpg", title: "Jet Speedster 🚀" },
-            "x4b8w": { level: 4, nextPage: 25, img: "puzzle4.jpg", title: "Star Aviator 🌟" },
-            "e9t2z": { level: 5, nextPage: 29, img: "puzzle5.jpg", title: "Galaxy Captain 👨‍✈️" }
+            "a8f3k": { level: 1, img: "puzzle1.jpg", title: "Sky Explorer ✈️" },
+            "m2p9x": { level: 2, img: "puzzle2.jpg", title: "Cloud Navigator ☁️" },
+            "r7v1q": { level: 3, img: "puzzle3.jpg", title: "Jet Speedster 🚀" },
+            "x4b8w": { level: 4, img: "puzzle4.jpg", title: "Star Aviator 🌟" },
+            "e9t2z": { level: 5, img: "puzzle5.jpg", title: "Galaxy Captain 👨‍✈️" }
         };
 
         let currentConfig = secureDatabase[passToken];
         let currentLevel = currentConfig ? currentConfig.level : parseInt(urlParams.get('level')) || 1;
         let imageName = currentConfig ? currentConfig.img : (urlParams.get('img') || `puzzle${currentLevel}.jpg`);
 
-        // وضع المطور
+        // وضع المطور وإخفاء الرمز من شريط العنوان فور الفتح
         if (userKey === DEV_MASTER_KEY) {
-            currentConfig = { level: currentLevel, nextPage: 99, img: `puzzle${currentLevel}.jpg`, title: "Dev Mode 🛠️" };
+            currentConfig = { level: currentLevel, img: `puzzle${currentLevel}.jpg`, title: "Dev Mode 🛠️" };
         } else if (currentConfig) {
-            // تنظيف شريط الرابط في المتصفح فورًا لمنع فحص الرابط أو نسخه
             window.history.replaceState({}, document.title, window.location.pathname);
         }
 
@@ -457,10 +456,6 @@
                     let statsHTML = `Time: ${secondsPassed}s | Moves: ${moves}`;
                     if (isNewRecord) {
                         statsHTML = `<div style="color: #D97706; font-size: 14px; margin-bottom: 4px;">👑 NEW RECORD! 👑</div>` + statsHTML;
-                    }
-
-                    if (currentConfig) {
-                        document.getElementById('nextPageNum').innerText = currentConfig.nextPage;
                     }
 
                     document.getElementById('winStats').innerHTML = statsHTML;
