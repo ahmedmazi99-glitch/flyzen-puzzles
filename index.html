@@ -213,21 +213,30 @@
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        let currentLevel = parseInt(urlParams.get('level')) || 1;
+        const passToken = urlParams.get('p');
         const userKey = urlParams.get('key');
-        const imageName = urlParams.get('img') || `puzzle${currentLevel}.jpg`;
+        const DEV_MASTER_KEY = "admin";
 
-        // كلمة السر الخاصة بك كمبرمج للدخول لأي مستوى
-        const DEV_MASTER_KEY = "الفا مايك1995";
-
-        // إعدادات المستويات والرمز السري ورقم الصفحة التالية للعودة للكتاب
-        const levelSecurity = {
-            1: { key: "sky1", nextPage: 13, title: "Sky Explorer ✈️" },
-            2: { key: "cloud2", nextPage: 17, title: "Cloud Navigator ☁️" },
-            3: { key: "jet3", nextPage: 21, title: "Jet Speedster 🚀" },
-            4: { key: "star4", nextPage: 25, title: "Star Aviator 🌟" },
-            5: { key: "galaxy5", nextPage: 29, title: "Galaxy Captain 👨‍✈️" }
+        // خريطة الهاش العشوائي غير القابل للتخمين مطلقًا
+        const secureDatabase = {
+            "a8f3k": { level: 1, nextPage: 13, img: "puzzle1.jpg", title: "Sky Explorer ✈️" },
+            "m2p9x": { level: 2, nextPage: 17, img: "puzzle2.jpg", title: "Cloud Navigator ☁️" },
+            "r7v1q": { level: 3, nextPage: 21, img: "puzzle3.jpg", title: "Jet Speedster 🚀" },
+            "x4b8w": { level: 4, nextPage: 25, img: "puzzle4.jpg", title: "Star Aviator 🌟" },
+            "e9t2z": { level: 5, nextPage: 29, img: "puzzle5.jpg", title: "Galaxy Captain 👨‍✈️" }
         };
+
+        let currentConfig = secureDatabase[passToken];
+        let currentLevel = currentConfig ? currentConfig.level : parseInt(urlParams.get('level')) || 1;
+        let imageName = currentConfig ? currentConfig.img : (urlParams.get('img') || `puzzle${currentLevel}.jpg`);
+
+        // وضع المطور
+        if (userKey === DEV_MASTER_KEY) {
+            currentConfig = { level: currentLevel, nextPage: 99, img: `puzzle${currentLevel}.jpg`, title: "Dev Mode 🛠️" };
+        } else if (currentConfig) {
+            // تنظيف شريط الرابط في المتصفح فورًا لمنع فحص الرابط أو نسخه
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
 
         const grid = document.getElementById('puzzle-grid');
         const hiddenImg = document.getElementById('secret-source');
@@ -246,7 +255,6 @@
         let timerInterval = null;
         let secondsPassed = 0;
 
-        const currentConfig = levelSecurity[currentLevel];
         const titleText = currentConfig ? currentConfig.title : "Sky Puzzle ✈️";
         document.getElementById('levelTitle').innerText = `Level ${currentLevel}: ${titleText}`;
 
@@ -267,20 +275,16 @@
         }
 
         function checkLevelAccess() {
-            // 1. السماح المباشر للمبرمج باستخدام كلمة السر الخاصة بك
-            if (userKey === DEV_MASTER_KEY) {
-                return true;
-            }
+            if (userKey === DEV_MASTER_KEY) return true;
 
-            // 2. التحقق من دخول الطفل عبر الكتاب المطبوع أو النسخة الرقمية
-            if (!currentConfig || userKey !== currentConfig.key) {
+            if (!currentConfig) {
                 grid.style.display = 'block';
                 grid.innerHTML = `
                     <div style="padding: 35px 15px; text-align: center;">
                         <div style="font-size: 48px; margin-bottom: 10px;">📖🔒</div>
                         <h2 style="color: #1E293B; margin: 0 0 8px 0; font-size: 20px;">Book Access Required!</h2>
                         <p style="color: #64748B; font-size: 14px; margin: 0; line-height: 1.4;">
-                            Please scan the QR code from your printed book or click the link in your PDF! ✈️
+                            Please scan the official QR code from your <b>Flyzen Activity Book</b> to play! ✈️
                         </p>
                     </div>
                 `;
