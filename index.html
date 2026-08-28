@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" translate="no">
 <head>
     <meta charset="UTF-8">
+    <meta name="google" content="notranslate">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Flyzen's Sky Puzzle Challenge! ✈️🧩</title>
     
@@ -105,23 +106,26 @@
             margin: 0 auto;
             display: grid;
             gap: 0;
-            background: #ffffff;
+            background: #000000;
             border: 4px solid #38BDF8;
             border-radius: 16px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
             overflow: hidden;
             position: relative;
             touch-action: none;
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
         }
 
         .tile {
             cursor: pointer;
-            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6), inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4), inset 0 0 0 1px rgba(0, 0, 0, 0.15);
             width: 100%;
             height: 100%;
             background-repeat: no-repeat;
             will-change: background-position, transform;
             touch-action: manipulation;
+            transition: opacity 0.2s ease;
         }
 
         .tile.selected {
@@ -131,8 +135,14 @@
             filter: brightness(1.15);
         }
 
-        #puzzle-grid.solved .tile { box-shadow: none !important; cursor: default; }
-        #puzzle-grid.solved { border-color: #06D6A0 !important; }
+        /* إخفاء المربعات عند الفوز لظهور الصورة الكاملة دون أي خطوط */
+        #puzzle-grid.solved .tile { 
+            opacity: 0 !important;
+            cursor: default; 
+        }
+        #puzzle-grid.solved { 
+            border-color: #06D6A0 !important; 
+        }
 
         .win-box {
             display: none;
@@ -195,6 +205,7 @@
             padding: 20px;
             font-size: 14px;
             grid-column: span 3;
+            background: #fff;
         }
     </style>
 </head>
@@ -229,7 +240,7 @@
             <div id="winStats" style="color: #0F766E; margin: 4px 0; font-size: 13px; font-weight: bold;"></div>
             
             <div style="background: linear-gradient(135deg, #FFF9DB 0%, #FEF3C7 100%); border: 3px dashed #F59E0B; border-radius: 16px; padding: 10px; margin-top: 8px;">
-                <div id="rankBadgeIcon" style="font-size: 32px; margin-bottom: 0;">🥉</div>
+                <div id="rankBadgeIcon" style="font-size: 32px; margin-bottom: 0;">🥇</div>
                 <div style="color: #92400E; font-size: 10px; font-weight: 700; letter-spacing: 1px;">FLIGHT PROMOTION CERTIFICATE</div>
                 <div id="rankTitle" style="color: #B45309; font-size: 15px; font-weight: bold; margin: 2px 0;">PROMOTED TO JUNIOR CO-PILOT!</div>
                 <div id="pointsEarned" style="color: #D97706; font-size: 13px; font-weight: bold; margin-bottom: 6px;">+0 XP EARNED</div>
@@ -249,17 +260,16 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         
-        // ⚡ دعم التخزين المؤقت لاستمرار الجلسة بعد التحديث ⚡
         let passToken = urlParams.get('p') ? urlParams.get('p').toLowerCase() : sessionStorage.getItem('flyzen_active_token');
         const userKey = urlParams.get('key');
         const DEV_MASTER_KEY = "alpha1995";
 
         const secureDatabase = {
-            "a8f3k": { level: 1, img: "puzzle1.jpg", title: "Sky Explorer ✈️", rank: "Junior Co-Pilot", badge: "🥉" },
-            "m2p9x": { level: 2, img: "puzzle2.jpg", title: "Cloud Navigator ☁️", rank: "Flight Captain", badge: "🥈" },
-            "r7v1q": { level: 3, img: "puzzle3.jpg", title: "Jet Speedster 🚀", rank: "Senior Aviator", badge: "🥇" },
-            "x4b8w": { level: 4, img: "puzzle4.jpg", title: "Star Aviator 🌟", rank: "Wing Commander", badge: "🎖️" },
-            "e9t2z": { level: 5, img: "puzzle5.jpg", title: "Galaxy Captain 👨‍✈️", rank: "Chief Commander", badge: "👑" }
+            "a8f3k": { level: 1, img: "puzzle1.jpg", title: "Sky Explorer ✈️", rank: "Junior Co-Pilot" },
+            "m2p9x": { level: 2, img: "puzzle2.jpg", title: "Cloud Navigator ☁️", rank: "Flight Captain" },
+            "r7v1q": { level: 3, img: "puzzle3.jpg", title: "Jet Speedster 🚀", rank: "Senior Aviator" },
+            "x4b8w": { level: 4, img: "puzzle4.jpg", title: "Star Aviator 🌟", rank: "Wing Commander" },
+            "e9t2z": { level: 5, img: "puzzle5.jpg", title: "Galaxy Captain 👨‍✈️", rank: "Chief Commander" }
         };
 
         let currentConfig = secureDatabase[passToken];
@@ -267,9 +277,8 @@
         let imageName = currentConfig ? currentConfig.img : (urlParams.get('img') || `puzzle${currentLevel}.jpg`);
 
         if (userKey === DEV_MASTER_KEY) {
-            currentConfig = { level: currentLevel, img: `puzzle${currentLevel}.jpg`, title: "Dev Mode 🛠️", rank: "Master Aviator", badge: "👑" };
+            currentConfig = { level: currentLevel, img: `puzzle${currentLevel}.jpg`, title: "Dev Mode 🛠️", rank: "Master Aviator" };
         } else if (currentConfig && passToken) {
-            // حفظ التوكن في الجلسة لمنع القفل عند الـ Refresh
             sessionStorage.setItem('flyzen_active_token', passToken);
             window.history.replaceState({}, document.title, window.location.pathname);
         }
@@ -329,7 +338,7 @@
             if (!currentConfig) {
                 grid.style.display = 'block';
                 grid.innerHTML = `
-                    <div style="padding: 35px 15px; text-align: center;">
+                    <div style="padding: 35px 15px; text-align: center; background: #fff;">
                         <div style="font-size: 48px; margin-bottom: 10px;">📖🔒</div>
                         <h2 style="color: #1E293B; margin: 0 0 8px 0; font-size: 20px;">Book Access Required!</h2>
                         <p style="color: #64748B; font-size: 14px; margin: 0; line-height: 1.4;">
@@ -483,6 +492,7 @@
 
         function shuffleTiles() {
             grid.classList.remove('solved');
+            grid.style.backgroundImage = 'none';
             winBox.style.display = 'none';
             document.getElementById('batchRankBanner').style.display = 'none';
             actionBtn.innerText = '🔄 Shuffle';
@@ -512,6 +522,9 @@
         function checkWin() {
             if (checkSolved()) {
                 stopTimer();
+                
+                // ⚡ إظهار الصورة الكاملة خلف شبكة البزل لإلغاء أي فواصل بيضاء ⚡
+                grid.style.backgroundImage = `url('${imageName}')`;
                 grid.classList.add('solved');
 
                 const basePoints = gridSize * 600;
@@ -556,9 +569,18 @@
                     playSound(800, 0.3);
                     confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 } });
                     
-                    document.getElementById('starRating').innerText = calculateStars();
+                    const stars = calculateStars();
+                    document.getElementById('starRating').innerText = stars;
                     document.getElementById('pointsEarned').innerText = `+${earnedXP} XP EARNED!`;
                     
+                    let performanceMedal = "🥉";
+                    if (stars === '⭐⭐⭐') {
+                        performanceMedal = "🥇";
+                    } else if (stars === '⭐⭐') {
+                        performanceMedal = "🥈";
+                    }
+                    document.getElementById('rankBadgeIcon').innerText = performanceMedal;
+
                     const banner = document.getElementById('batchRankBanner');
                     if (isSpeedMaster && isFocusMaster) {
                         banner.innerText = '👑 1ST IN BATCH: MASTER PILOT (SPEED & FOCUS)! 🧠⚡';
@@ -576,7 +598,6 @@
                     document.getElementById('winStats').innerHTML = `Time: ${secondsPassed}s | Moves: ${moves}`;
 
                     if (currentConfig) {
-                        document.getElementById('rankBadgeIcon').innerText = currentConfig.badge || '🎖️';
                         document.getElementById('rankTitle').innerText = `PROMOTED TO ${currentConfig.rank.toUpperCase()}!`;
                     }
 
