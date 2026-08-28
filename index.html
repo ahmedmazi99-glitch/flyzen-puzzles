@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="google" content="notranslate">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Flyzen 3D Real Jigsaw ✈️</title>
+    <title>Flyzen official puzzle ✈️</title>
     
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
@@ -99,6 +99,7 @@
             color: #78350F;
         }
 
+        /* 🧩 إطار الكانفاس الحاوي للبزل 🧩 */
         #canvas-wrapper {
             width: 100%;
             max-width: 360px;
@@ -106,9 +107,9 @@
             position: relative;
             border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), inset 0 0 15px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
             border: 4px solid #38BDF8;
-            background: #0B132B;
+            background: #0F172A;
         }
 
         canvas {
@@ -161,19 +162,12 @@
             box-shadow: 0 6px 15px rgba(6, 214, 160, 0.3);
         }
 
-        /* 💎 العلامة المائية الشفافة المخصصة باسمك 💎 */
         .watermark {
-            margin-top: 12px;
+            margin-top: 10px;
             font-size: 10px;
+            color: #94A3B8;
             font-weight: 700;
-            letter-spacing: 2px;
-            color: rgba(148, 163, 184, 0.8);
-            background: rgba(241, 245, 249, 0.6);
-            padding: 4px 14px;
-            border-radius: 50px;
-            border: 1px solid rgba(203, 213, 225, 0.6);
-            pointer-events: none;
-            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
     </style>
 </head>
@@ -221,11 +215,11 @@
             <button class="btn" id="actionBtn" onclick="shuffleTiles()">🔄 Shuffle</button>
         </div>
 
-        <div class="watermark">BY AHMED MAZIGHI</div>
+        <div class="watermark">© FLYZEN BY AHMED MAZIGHI</div>
     </div>
 
     <script>
-        // 🛡️ حماية الحوار والكشف (Anti-DevTools) 🛡️
+        // 🛡️ حماية ضد الكشف والتفتيش (Anti-DevTools) 🛡️
         document.addEventListener('keydown', function(e) {
             if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) {
                 e.preventDefault();
@@ -276,6 +270,7 @@
         let boardW = 360, boardH = 360;
         let pieceW = 120, pieceH = 120;
 
+        // 🔊 الصوتيات والتأثيرات 🔊
         let audioCtx = null;
         function playSound(freq, duration = 0.08) {
             try {
@@ -323,8 +318,10 @@
             updateScoreDisplays();
         }
 
+        // 🧩 رسم نتوءات البزل التشابكية الهندسية الاحترافية 🧩
         function generatePieces() {
             pieces = [];
+            // إنشاء مصفوفة حواف متطابقة لتتداخل القطع تماماً
             let hEdges = Array.from({length: rows - 1}, () => Array.from({length: cols}, () => Math.random() < 0.5 ? 1 : -1));
             let vEdges = Array.from({length: rows}, () => Array.from({length: cols - 1}, () => Math.random() < 0.5 ? 1 : -1));
 
@@ -399,7 +396,6 @@
             ctx.closePath();
         }
 
-        /* 🎨 دالة الرسم مع تجسيم الـ 3D العميق 🎨 */
         function render() {
             ctx.clearRect(0, 0, boardW, boardH);
 
@@ -408,9 +404,11 @@
                 return;
             }
 
-            ctx.fillStyle = "#0B132B";
+            // خلفية اللوحة الشبكية
+            ctx.fillStyle = "#0F172A";
             ctx.fillRect(0, 0, boardW, boardH);
 
+            // رسم القطع المبعثرة بالترتيب الحالي
             currentOrder.forEach((pieceIdx, gridIdx) => {
                 const p = pieces[pieceIdx];
                 const gridR = Math.floor(gridIdx / cols);
@@ -419,25 +417,16 @@
                 const x = gridC * pieceW;
                 const y = gridR * pieceH;
 
-                // 1️⃣ رسم الظل الساقط (Drop Shadow) لجعل القطعة مرتفعة عن اللوحة
                 ctx.save();
-                ctx.shadowColor = selectedIndex === gridIdx ? "rgba(0, 0, 0, 0.85)" : "rgba(0, 0, 0, 0.55)";
-                ctx.shadowBlur = selectedIndex === gridIdx ? 16 : 8;
-                ctx.shadowOffsetX = selectedIndex === gridIdx ? 4 : 2;
-                ctx.shadowOffsetY = selectedIndex === gridIdx ? 8 : 4;
                 
-                ctx.fillStyle = "#000000";
-                drawPiecePath(ctx, x, y, pieceW, pieceH, p.edges);
-                ctx.fill();
-                ctx.restore();
-
-                // 2️⃣ رسم صورة البزل داخل المسار
-                ctx.save();
+                // قص الحافة ورسم النتوء
                 drawPiecePath(ctx, x, y, pieceW, pieceH, p.edges);
                 ctx.clip();
 
+                // عينات امتداد تفاصيل الصورة لحساب النتوءات الخارجة (Bleed Sampling)
                 const bleedW = pieceW * 0.3;
                 const bleedH = pieceH * 0.3;
+
                 const srcW = img.naturalWidth / cols;
                 const srcH = img.naturalHeight / rows;
                 const srcX = p.origC * srcW;
@@ -449,37 +438,29 @@
                     x - bleedW, y - bleedH, pieceW * 1.6, pieceH * 1.6
                 );
 
-                // 3️⃣ تدرج التجسيم الضوئي (3D Bevel Gradient Overlay)
-                let grad = ctx.createLinearGradient(x, y, x + pieceW, y + pieceH);
-                grad.addColorStop(0, "rgba(255, 255, 255, 0.35)"); // لمعة من الأعلى
-                grad.addColorStop(0.5, "rgba(255, 255, 255, 0.0)");
-                grad.addColorStop(1, "rgba(0, 0, 0, 0.35)");       // ظل حافة من الأسفل
-                ctx.fillStyle = grad;
-                ctx.fill();
+                // إطار 3D وانعكاس ضوئي زجاجي عريض
                 ctx.restore();
-
-                // 4️⃣ رسم حواشي 3D (ظل داكن سفلي + إضاءة عاكسة علوية)
                 ctx.save();
                 drawPiecePath(ctx, x, y, pieceW, pieceH, p.edges);
-                ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
-                ctx.lineWidth = 3;
-                ctx.stroke();
 
                 if (selectedIndex === gridIdx) {
                     ctx.strokeStyle = "#FF477E";
                     ctx.lineWidth = 4;
-                    ctx.shadowColor = "rgba(255, 71, 126, 0.9)";
-                    ctx.shadowBlur = 10;
-                    ctx.stroke();
+                    ctx.shadowColor = "rgba(255, 71, 126, 0.8)";
+                    ctx.shadowBlur = 12;
                 } else {
-                    ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
-                    ctx.lineWidth = 1.8;
-                    ctx.stroke();
+                    ctx.strokeStyle = "rgba(255, 255, 255, 0.65)";
+                    ctx.lineWidth = 2;
+                    ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
+                    ctx.shadowBlur = 4;
+                    ctx.shadowOffsetY = 2;
                 }
+                ctx.stroke();
                 ctx.restore();
             });
         }
 
+        // --- التفاعل والتحريك برمجياً ---
         canvas.addEventListener('pointerdown', (e) => {
             if (isSolved) return;
             const rect = canvas.getBoundingClientRect();
