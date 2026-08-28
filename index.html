@@ -7,7 +7,7 @@
     <title>Flyzen Official Puzzle ✈️</title>
     
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
 
     <style>
         * {
@@ -46,6 +46,83 @@
             position: relative;
         }
 
+        /* ✈️ خريطة مسار الطيران (Flight Map Bar) ✈️ */
+        .flight-map-container {
+            width: 100%;
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 18px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+        }
+
+        .map-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            color: #64748B;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .flight-path {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .flight-path::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            right: 15px;
+            height: 3px;
+            background: #E2E8F0;
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+
+        .map-node {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #CBD5E1;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            position: relative;
+            z-index: 2;
+            border: 2px solid #FFFFFF;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .map-node.completed {
+            background: #10B981;
+            color: white;
+            border-color: #D1FAE5;
+        }
+
+        .map-node.active {
+            background: #0284C7;
+            color: white;
+            border-color: #BAE6FD;
+            transform: scale(1.2);
+            box-shadow: 0 0 12px rgba(2, 132, 199, 0.5);
+        }
+
+        .map-node.trophy {
+            font-size: 14px;
+            background: #F59E0B;
+            color: white;
+        }
+
         .badge {
             background: #0EA5E9;
             color: white;
@@ -57,11 +134,11 @@
             letter-spacing: 0.5px;
         }
 
-        h1 { color: #0F172A; font-size: 20px; margin: 0 0 6px 0; }
+        h1 { color: #0F172A; font-size: 18px; margin: 0 0 6px 0; }
         
         .game-info {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             font-size: 11px;
             font-weight: 700;
             color: #0284C7;
@@ -72,7 +149,7 @@
 
         .info-pill {
             background: #F0F9FF;
-            padding: 4px 10px;
+            padding: 4px 8px;
             border-radius: 12px;
             border: 1px solid #BAE6FD;
         }
@@ -87,9 +164,9 @@
             background: #F1F5F9;
             border: 2px solid #CBD5E1;
             color: #475569;
-            padding: 6px 12px;
+            padding: 5px 10px;
             border-radius: 12px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             cursor: pointer;
         }
@@ -100,7 +177,6 @@
             color: #FFFFFF;
         }
 
-        /* 💎 إطار البزل ثلاثي الأبعاد الممتاز 💎 */
         #puzzle-container {
             position: relative;
             width: 100%;
@@ -179,7 +255,6 @@
             border: 4px solid #38BDF8;
         }
 
-        /* 🖼️ العلامة المائية داخل الصورة (Frosted Glass Minimalist Stamp) 🖼️ */
         .in-grid-watermark {
             position: absolute;
             bottom: 10px;
@@ -219,23 +294,6 @@
 
         .stars { font-size: 26px; margin: 2px 0; }
 
-        .batch-first-banner {
-            background: linear-gradient(90deg, #38BDF8, #0284C7);
-            color: #FFFFFF;
-            font-weight: bold;
-            font-size: 12px;
-            padding: 6px;
-            border-radius: 10px;
-            margin-bottom: 8px;
-            box-shadow: 0 3px 8px rgba(2, 132, 199, 0.3);
-            animation: pulse 1.5s infinite alternate;
-        }
-
-        @keyframes pulse {
-            from { transform: scale(1); }
-            to { transform: scale(1.03); }
-        }
-
         .btn-group { display: flex; gap: 8px; margin-top: 14px; width: 100%; justify-content: center; }
 
         .btn {
@@ -258,7 +316,6 @@
             box-shadow: 0 6px 15px rgba(100, 116, 139, 0.3);
         }
 
-        /* ✒️ توقيع الصفحة الفخم (Minimalist Studio Footer) ✒️ */
         .page-signature {
             margin-top: 18px;
             display: flex;
@@ -285,6 +342,18 @@
 <body oncontextmenu="return false;">
 
     <div class="card">
+        <!-- 🗺️ خريطة المسار 🗺️ -->
+        <div class="flight-map-container">
+            <div class="map-title">FLYZEN FLIGHT MISSION PATH</div>
+            <div class="flight-path" id="flightPath">
+                <div class="map-node" id="node-1">1</div>
+                <div class="map-node" id="node-2">🔒</div>
+                <div class="map-node" id="node-3">🔒</div>
+                <div class="map-node" id="node-4">🔒</div>
+                <div class="map-node trophy" id="node-5">🏆</div>
+            </div>
+        </div>
+
         <span class="badge">✈️ FLYZEN OFFICIAL ACTIVITY</span>
         <h1 id="levelTitle">Level 1: Sky Explorer 🧩</h1>
         
@@ -304,24 +373,21 @@
         <div id="puzzle-container">
             <div id="puzzle-grid"></div>
             <div id="hint-overlay"></div>
-            <!-- العلامة المائية داخل الصورة -->
             <div class="in-grid-watermark">BY MAZIGHI AHMED</div>
         </div>
 
         <div id="winBox" class="win-box">
-            <div id="batchRankBanner" class="batch-first-banner" style="display:none;"></div>
-
-            <h2 style="color: #0284C7; margin: 0; font-size: 20px;">🎉 MISSION COMPLETED! 🎉</h2>
+            <h2 id="winBoxHeading" style="color: #0284C7; margin: 0; font-size: 18px;">🎉 MISSION COMPLETED! 🎉</h2>
             <div class="stars" id="starRating">⭐⭐⭐</div>
-            <div id="winStats" style="color: #0F766E; margin: 4px 0; font-size: 13px; font-weight: bold;"></div>
+            <div id="winStats" style="color: #0F766E; margin: 4px 0; font-size: 12px; font-weight: bold;"></div>
             
-            <div style="background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%); border: 2px dashed #0284C7; border-radius: 16px; padding: 10px; margin-top: 8px;">
-                <div id="rankBadgeIcon" style="font-size: 32px; margin-bottom: 0;">🥇</div>
-                <div style="color: #0369A1; font-size: 10px; font-weight: 700; letter-spacing: 1px;">FLIGHT PROMOTION CERTIFICATE</div>
-                <div id="rankTitle" style="color: #0284C7; font-size: 15px; font-weight: bold; margin: 2px 0;">PROMOTED TO JUNIOR CO-PILOT!</div>
-                <div id="pointsEarned" style="color: #0EA5E9; font-size: 13px; font-weight: bold; margin-bottom: 6px;">+0 XP EARNED</div>
-                <p style="color: #334155; font-size: 12px; margin: 0; font-weight: bold; line-height: 1.3;">
-                    ✈️ Head back to your book and solve the activities to unlock the next level!
+            <div id="certificateContainer" style="background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%); border: 2px dashed #0284C7; border-radius: 16px; padding: 10px; margin-top: 8px;">
+                <div id="rankBadgeIcon" style="font-size: 32px; margin-bottom: 0;">👨‍✈️</div>
+                <div id="certificateLabel" style="color: #0369A1; font-size: 9px; font-weight: 700; letter-spacing: 1px;">FLIGHT PROMOTION</div>
+                <div id="rankTitle" style="color: #0284C7; font-size: 14px; font-weight: bold; margin: 2px 0;">PROMOTED TO JUNIOR CO-PILOT!</div>
+                <div id="pointsEarned" style="color: #0EA5E9; font-size: 12px; font-weight: bold; margin-bottom: 4px;">+0 XP EARNED</div>
+                <p id="nextStepNotice" style="color: #334155; font-size: 11px; margin: 0; font-weight: bold; line-height: 1.3;">
+                    ✈️ Scan the next QR code in your book to unlock Station 2!
                 </p>
             </div>
         </div>
@@ -332,7 +398,6 @@
         </div>
     </div>
 
-    <!-- التوقيع العصري في أسفل الصفحة -->
     <div class="page-signature">
         BY MAZIGHI AHMED
     </div>
@@ -352,11 +417,11 @@
         const DEV_MASTER_KEY = "alpha1995";
 
         const secureDatabase = {
-            "a8f3k": { level: 1, img: "puzzle1.jpg", title: "Sky Explorer ✈️", rank: "Junior Co-Pilot" },
-            "m2p9x": { level: 2, img: "puzzle2.jpg", title: "Cloud Navigator ☁️", rank: "Flight Captain" },
-            "r7v1q": { level: 3, img: "puzzle3.jpg", title: "Jet Speedster 🚀", rank: "Senior Aviator" },
-            "x4b8w": { level: 4, img: "puzzle4.jpg", title: "Star Aviator 🌟", rank: "Wing Commander" },
-            "e9t2z": { level: 5, img: "puzzle5.jpg", title: "Galaxy Captain 👨‍✈️", rank: "Chief Commander" }
+            "a8f3k": { level: 1, img: "puzzle1.jpg", title: "Sky Explorer ✈️", rank: "Junior Co-Pilot 👨‍✈️" },
+            "m2p9x": { level: 2, img: "puzzle2.jpg", title: "Cloud Navigator ☁️", rank: "Flight Captain ✈️" },
+            "r7v1q": { level: 3, img: "puzzle3.jpg", title: "Jet Speedster 🚀", rank: "Senior Aviator 🚀" },
+            "x4b8w": { level: 4, img: "puzzle4.jpg", title: "Star Aviator 🌟", rank: "Wing Commander 🌟" },
+            "e9t2z": { level: 5, img: "puzzle5.jpg", title: "Galaxy Champion 🏆", rank: "Chief Commander 👑" }
         };
 
         let currentConfig = secureDatabase[passToken];
@@ -364,7 +429,7 @@
         let imageName = currentConfig ? currentConfig.img : (urlParams.get('img') || `puzzle${currentLevel}.jpg`);
 
         if (userKey === DEV_MASTER_KEY) {
-            currentConfig = { level: currentLevel, img: `puzzle${currentLevel}.jpg`, title: "Dev Mode 🛠️", rank: "Master Aviator" };
+            currentConfig = { level: currentLevel, img: `puzzle${currentLevel}.jpg`, title: `Dev Level ${currentLevel}`, rank: "Master Aviator" };
         } else if (currentConfig && passToken) {
             sessionStorage.setItem('flyzen_active_token', passToken);
             window.history.replaceState({}, document.title, window.location.pathname);
@@ -409,6 +474,30 @@
                 osc.start();
                 osc.stop(ctx.currentTime + duration);
             } catch(e) {}
+        }
+
+        // 🗺️ تحديث رسم الخريطة بناءً على التقدم المحفوظ 🗺️
+        function updateFlightMap() {
+            let maxUnlocked = parseInt(localStorage.getItem('flyzen_max_unlocked')) || 1;
+            if (currentLevel > maxUnlocked) {
+                maxUnlocked = currentLevel;
+                localStorage.setItem('flyzen_max_unlocked', maxUnlocked);
+            }
+
+            for (let i = 1; i <= 5; i++) {
+                const node = document.getElementById(`node-${i}`);
+                node.className = 'map-node';
+
+                if (i < currentLevel || (i < maxUnlocked && i !== currentLevel)) {
+                    node.classList.add('completed');
+                    node.innerText = '✓';
+                } else if (i === currentLevel) {
+                    node.classList.add('active');
+                    node.innerText = i === 5 ? '🏆' : i;
+                } else {
+                    node.innerText = i === 5 ? '🏆' : '🔒';
+                }
+            }
         }
 
         document.getElementById('levelTitle').innerText = `Level ${currentLevel}: ${currentConfig ? currentConfig.title : "Sky Puzzle ✈️"}`;
@@ -511,6 +600,7 @@
         }
 
         function initGame() {
+            updateFlightMap();
             setupGridCSS();
             createDOMGrid();
             currentOrder = Array.from({length: gridSize * gridSize}, (_, i) => i);
@@ -549,7 +639,6 @@
             grid.classList.remove('solved');
             grid.style.backgroundImage = 'none';
             winBox.style.display = 'none';
-            document.getElementById('batchRankBanner').style.display = 'none';
             actionBtn.innerText = '🔄 Shuffle';
             moves = 0;
             movesEl.innerText = `👆 Moves: 0`;
@@ -569,9 +658,9 @@
 
         function calculateStars() {
             let targetTime = gridSize === 3 ? 45 : (gridSize === 4 ? 90 : 180);
-            if (secondsPassed <= targetTime) return '⭐⭐⭐';
-            if (secondsPassed <= targetTime * 1.5) return '⭐⭐';
-            return '⭐';
+            if (secondsPassed <= targetTime) return 3;
+            if (secondsPassed <= targetTime * 1.5) return 2;
+            return 1;
         }
 
         function checkWin() {
@@ -580,9 +669,18 @@
                 grid.classList.add('solved');
                 grid.style.backgroundImage = `url('${imageName}')`;
 
+                let starCount = calculateStars();
                 let earnedXP = Math.max(200, (gridSize * 600) - (secondsPassed * 2));
                 let totalXP = (parseInt(localStorage.getItem('flyzen_total_xp')) || 0) + earnedXP;
                 localStorage.setItem('flyzen_total_xp', totalXP);
+
+                // حفظ نجوم هذا المستوى
+                localStorage.setItem(`stars_lvl_${currentLevel}`, starCount);
+
+                // فتح المستوى التالي في الخريطة
+                let nextLevel = Math.min(5, currentLevel + 1);
+                localStorage.setItem('flyzen_max_unlocked', nextLevel);
+                updateFlightMap();
 
                 const timeKey = `best_time_lvl_${currentLevel}_grid_${gridSize}`;
                 const savedBestTime = localStorage.getItem(timeKey);
@@ -594,25 +692,37 @@
 
                 setTimeout(() => {
                     playSound(800, 0.3);
-                    confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 } });
+                    confetti({ particleCount: 180, spread: 100, origin: { y: 0.6 } });
                     
-                    const stars = calculateStars();
-                    document.getElementById('starRating').innerText = stars;
+                    document.getElementById('starRating').innerText = '⭐'.repeat(starCount);
                     document.getElementById('pointsEarned').innerText = `+${earnedXP} XP EARNED!`;
-                    
-                    let medal = stars === '⭐⭐⭐' ? "🥇" : (stars === '⭐⭐' ? "🥈" : "🥉");
-                    document.getElementById('rankBadgeIcon').innerText = medal;
-
-                    const banner = document.getElementById('batchRankBanner');
-                    if (stars === '⭐⭐⭐') {
-                        banner.innerText = '👑 LIGHTNING SPEED MASTER! ⚡';
-                        banner.style.display = 'block';
-                    } else {
-                        banner.style.display = 'none';
-                    }
-
                     document.getElementById('winStats').innerHTML = `Time: ${secondsPassed}s | Moves: ${moves}`;
-                    if (currentConfig) document.getElementById('rankTitle').innerText = `PROMOTED TO ${currentConfig.rank.toUpperCase()}!`;
+
+                    // 🏆 في حالة إكمال المرحلة 5 (النهاية) 🏆
+                    if (currentLevel === 5) {
+                        document.getElementById('winBoxHeading').innerText = '🥇 GRAND MISSION COMPLETED! 🥇';
+                        document.getElementById('certificateLabel').innerText = 'OFFICIAL AVIATION MEDAL';
+                        document.getElementById('rankBadgeIcon').innerText = '🏆';
+                        
+                        // احتساب الميدالية النهائية حسب الأداء التراكمي
+                        let totalStarsEarned = 0;
+                        for (let l = 1; l <= 5; l++) {
+                            totalStarsEarned += parseInt(localStorage.getItem(`stars_lvl_${l}`)) || 1;
+                        }
+
+                        let medalRank = "GOLD MEDAL CHAMPION 🥇";
+                        if (totalStarsEarned < 10) medalRank = "BRONZE MEDAL AVIATOR 🥉";
+                        else if (totalStarsEarned < 14) medalRank = "SILVER MEDAL AVIATOR 🥈";
+
+                        document.getElementById('rankTitle').innerText = medalRank;
+                        document.getElementById('nextStepNotice').innerHTML = `🎉 CONGRATULATIONS! You completed all stations in your Flyzen book!`;
+                    } else {
+                        document.getElementById('winBoxHeading').innerText = '🎉 MISSION COMPLETED! 🎉';
+                        document.getElementById('certificateLabel').innerText = 'FLIGHT PROMOTION';
+                        document.getElementById('rankBadgeIcon').innerText = currentLevel === 1 ? "👨‍✈️" : (currentLevel === 2 ? "✈️" : "🚀");
+                        if (currentConfig) document.getElementById('rankTitle').innerText = `PROMOTED TO ${currentConfig.rank.toUpperCase()}!`;
+                        document.getElementById('nextStepNotice').innerHTML = `✈️ Scan the next QR code in your book to unlock Station ${currentLevel + 1}!`;
+                    }
 
                     winBox.style.display = 'block';
                     actionBtn.innerText = '🔄 Play Again';
