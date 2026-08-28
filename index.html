@@ -46,7 +46,7 @@
             position: relative;
         }
 
-        /* ✈️ خريطة مسار الطيران (Flight Map Bar) ✈️ */
+        /* ✈️ خريطة مسار الطيران الديناميكية (Dynamic Flight Path) ✈️ */
         .flight-map-container {
             width: 100%;
             background: #F8FAFC;
@@ -80,7 +80,7 @@
             left: 15px;
             right: 15px;
             height: 3px;
-            background: #E2E8F0;
+            background: #CBD5E1;
             transform: translateY(-50%);
             z-index: 1;
         }
@@ -94,7 +94,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             position: relative;
             z-index: 2;
@@ -103,24 +103,30 @@
             transition: all 0.3s ease;
         }
 
-        .map-node.completed {
-            background: #10B981;
+        /* تلوين المحطات حسب الصعوبة المنجزة */
+        .map-node.diff-3 {
+            background: #CD7F32 !important; /* Bronze */
             color: white;
-            border-color: #D1FAE5;
+            border-color: #FDE68A;
+        }
+
+        .map-node.diff-4 {
+            background: #94A3B8 !important; /* Silver */
+            color: white;
+            border-color: #F1F5F9;
+        }
+
+        .map-node.diff-5 {
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important; /* Gold */
+            color: white;
+            border-color: #FEF08A;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
         }
 
         .map-node.active {
-            background: #0284C7;
-            color: white;
-            border-color: #BAE6FD;
             transform: scale(1.2);
-            box-shadow: 0 0 12px rgba(2, 132, 199, 0.5);
-        }
-
-        .map-node.trophy {
-            font-size: 14px;
-            background: #F59E0B;
-            color: white;
+            border-color: #0284C7 !important;
+            box-shadow: 0 0 12px rgba(2, 132, 199, 0.6);
         }
 
         .badge {
@@ -130,12 +136,24 @@
             border-radius: 20px;
             font-size: 12px;
             font-weight: 700;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             letter-spacing: 0.5px;
         }
 
-        h1 { color: #0F172A; font-size: 18px; margin: 0 0 6px 0; }
+        h1 { color: #0F172A; font-size: 17px; margin: 0 0 4px 0; }
         
+        .current-rank-badge {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            color: #D97706;
+            background: #FFFBEB;
+            border: 1px dashed #F59E0B;
+            padding: 3px 10px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+        }
+
         .game-info {
             display: flex;
             gap: 6px;
@@ -344,18 +362,19 @@
     <div class="card">
         <!-- 🗺️ خريطة المسار 🗺️ -->
         <div class="flight-map-container">
-            <div class="map-title">FLYZEN FLIGHT MISSION PATH</div>
+            <div class="map-title">FLYZEN MISSION PATH</div>
             <div class="flight-path" id="flightPath">
                 <div class="map-node" id="node-1">1</div>
                 <div class="map-node" id="node-2">🔒</div>
                 <div class="map-node" id="node-3">🔒</div>
                 <div class="map-node" id="node-4">🔒</div>
-                <div class="map-node trophy" id="node-5">🏆</div>
+                <div class="map-node" id="node-5">🏆</div>
             </div>
         </div>
 
         <span class="badge">✈️ FLYZEN OFFICIAL ACTIVITY</span>
         <h1 id="levelTitle">Level 1: Sky Explorer 🧩</h1>
+        <div class="current-rank-badge" id="currentRankBadge">TARGET RANK: JUNIOR CADET 🐣</div>
         
         <div class="game-info" id="gameInfo">
             <span class="info-pill" id="timer">⏱️ 00:00</span>
@@ -416,12 +435,41 @@
         const userKey = urlParams.get('key');
         const DEV_MASTER_KEY = "alpha1995";
 
+        // 🎖️ مصفوفة الرتب الشاملة بناءً على المستوى + مستوى الصعوبة 🎖️
+        const rankMatrix = {
+            1: {
+                3: { title: "Junior Cadet 🐣", icon: "🐣" },
+                4: { title: "Sky Explorer ✈️", icon: "✈️" },
+                5: { title: "Master Explorer 🚀", icon: "🚀" }
+            },
+            2: {
+                3: { title: "Cloud Navigator ☁️", icon: "☁️" },
+                4: { title: "Flight Captain 👨‍✈️", icon: "👨‍✈️" },
+                5: { title: "Storm Conqueror 🌩️", icon: "🌩️" }
+            },
+            3: {
+                3: { title: "Jet Racer 🏎️", icon: "🏎️" },
+                4: { title: "Speed Aviator ⚡", icon: "⚡" },
+                5: { title: "Supersonic Ace 💥", icon: "💥" }
+            },
+            4: {
+                3: { title: "Star Cadet 🌟", icon: "🌟" },
+                4: { title: "Wing Commander 🎖️", icon: "🎖️" },
+                5: { title: "Galaxy Sentinel 🛡️", icon: "🛡️" }
+            },
+            5: {
+                3: { title: "Chief Commander 👑", icon: "👑" },
+                4: { title: "Sky Sovereign 🌌", icon: "🌌" },
+                5: { title: "SUPREME AVIATOR LEGEND 🏆", icon: "🏆" }
+            }
+        };
+
         const secureDatabase = {
-            "a8f3k": { level: 1, img: "puzzle1.jpg", title: "Sky Explorer ✈️", rank: "Junior Co-Pilot 👨‍✈️" },
-            "m2p9x": { level: 2, img: "puzzle2.jpg", title: "Cloud Navigator ☁️", rank: "Flight Captain ✈️" },
-            "r7v1q": { level: 3, img: "puzzle3.jpg", title: "Jet Speedster 🚀", rank: "Senior Aviator 🚀" },
-            "x4b8w": { level: 4, img: "puzzle4.jpg", title: "Star Aviator 🌟", rank: "Wing Commander 🌟" },
-            "e9t2z": { level: 5, img: "puzzle5.jpg", title: "Galaxy Champion 🏆", rank: "Chief Commander 👑" }
+            "a8f3k": { level: 1, img: "puzzle1.jpg", title: "Sky Explorer ✈️" },
+            "m2p9x": { level: 2, img: "puzzle2.jpg", title: "Cloud Navigator ☁️" },
+            "r7v1q": { level: 3, img: "puzzle3.jpg", title: "Jet Speedster 🚀" },
+            "x4b8w": { level: 4, img: "puzzle4.jpg", title: "Star Aviator 🌟" },
+            "e9t2z": { level: 5, img: "puzzle5.jpg", title: "Galaxy Champion 🏆" }
         };
 
         let currentConfig = secureDatabase[passToken];
@@ -429,7 +477,7 @@
         let imageName = currentConfig ? currentConfig.img : (urlParams.get('img') || `puzzle${currentLevel}.jpg`);
 
         if (userKey === DEV_MASTER_KEY) {
-            currentConfig = { level: currentLevel, img: `puzzle${currentLevel}.jpg`, title: `Dev Level ${currentLevel}`, rank: "Master Aviator" };
+            currentConfig = { level: currentLevel, img: `puzzle${currentLevel}.jpg`, title: `Dev Level ${currentLevel}` };
         } else if (currentConfig && passToken) {
             sessionStorage.setItem('flyzen_active_token', passToken);
             window.history.replaceState({}, document.title, window.location.pathname);
@@ -476,7 +524,7 @@
             } catch(e) {}
         }
 
-        // 🗺️ تحديث رسم الخريطة بناءً على التقدم المحفوظ 🗺️
+        // 🗺️ تحديث المسار بألوان الصعوبة المنجزة (🥉 فضي 🥈 ذهبي 🥇) 🗺️
         function updateFlightMap() {
             let maxUnlocked = parseInt(localStorage.getItem('flyzen_max_unlocked')) || 1;
             if (currentLevel > maxUnlocked) {
@@ -488,16 +536,28 @@
                 const node = document.getElementById(`node-${i}`);
                 node.className = 'map-node';
 
-                if (i < currentLevel || (i < maxUnlocked && i !== currentLevel)) {
-                    node.classList.add('completed');
+                // قراءة أعلى صعوبة تم تحقيقها لهذه المحطة
+                let savedDiff = parseInt(localStorage.getItem(`lvl_${i}_best_diff`));
+
+                if (savedDiff) {
+                    node.classList.add(`diff-${savedDiff}`);
+                    node.innerText = savedDiff === 5 ? '🥇' : (savedDiff === 4 ? '🥈' : '🥉');
+                } else if (i < maxUnlocked || i < currentLevel) {
+                    node.classList.add('diff-3');
                     node.innerText = '✓';
-                } else if (i === currentLevel) {
-                    node.classList.add('active');
-                    node.innerText = i === 5 ? '🏆' : i;
                 } else {
-                    node.innerText = i === 5 ? '🏆' : '🔒';
+                    node.innerText = i === 5 ? '🏆' : (i > maxUnlocked ? '🔒' : i);
+                }
+
+                if (i === currentLevel) {
+                    node.classList.add('active');
                 }
             }
+        }
+
+        function updateRankTargetUI() {
+            const currentRank = rankMatrix[currentLevel][gridSize];
+            document.getElementById('currentRankBadge').innerText = `TARGET RANK: ${currentRank.title.toUpperCase()}`;
         }
 
         document.getElementById('levelTitle').innerText = `Level ${currentLevel}: ${currentConfig ? currentConfig.title : "Sky Puzzle ✈️"}`;
@@ -532,6 +592,7 @@
             gridSize = size;
             document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+            updateRankTargetUI();
             initGame();
         }
 
@@ -600,6 +661,7 @@
         }
 
         function initGame() {
+            updateRankTargetUI();
             updateFlightMap();
             setupGridCSS();
             createDOMGrid();
@@ -670,12 +732,20 @@
                 grid.style.backgroundImage = `url('${imageName}')`;
 
                 let starCount = calculateStars();
-                let earnedXP = Math.max(200, (gridSize * 600) - (secondsPassed * 2));
+
+                // مضاعف نقاط الصعوبة (3x3 = 1x | 4x4 = 1.5x | 5x5 = 2.5x)
+                let diffMultiplier = gridSize === 3 ? 1 : (gridSize === 4 ? 1.5 : 2.5);
+                let baseXP = Math.max(200, (gridSize * 600) - (secondsPassed * 2));
+                let earnedXP = Math.round(baseXP * diffMultiplier);
+
                 let totalXP = (parseInt(localStorage.getItem('flyzen_total_xp')) || 0) + earnedXP;
                 localStorage.setItem('flyzen_total_xp', totalXP);
 
-                // حفظ نجوم هذا المستوى
-                localStorage.setItem(`stars_lvl_${currentLevel}`, starCount);
+                // حفظ أعلى صعوبة تم إنجازها لهذا المستوى في الخريطة
+                let prevBestDiff = parseInt(localStorage.getItem(`lvl_${currentLevel}_best_diff`)) || 0;
+                if (gridSize > prevBestDiff) {
+                    localStorage.setItem(`lvl_${currentLevel}_best_diff`, gridSize);
+                }
 
                 // فتح المستوى التالي في الخريطة
                 let nextLevel = Math.min(5, currentLevel + 1);
@@ -692,35 +762,23 @@
 
                 setTimeout(() => {
                     playSound(800, 0.3);
-                    confetti({ particleCount: 180, spread: 100, origin: { y: 0.6 } });
+                    confetti({ particleCount: 200, spread: 110, origin: { y: 0.6 } });
                     
                     document.getElementById('starRating').innerText = '⭐'.repeat(starCount);
-                    document.getElementById('pointsEarned').innerText = `+${earnedXP} XP EARNED!`;
-                    document.getElementById('winStats').innerHTML = `Time: ${secondsPassed}s | Moves: ${moves}`;
+                    document.getElementById('pointsEarned').innerText = `+${earnedXP} XP EARNED (${gridSize}x${gridSize} MULTIPLIER)!`;
+                    document.getElementById('winStats').innerHTML = `Time: ${secondsPassed}s | Moves: ${moves} | Grid: ${gridSize}x${gridSize}`;
 
-                    // 🏆 في حالة إكمال المرحلة 5 (النهاية) 🏆
+                    const achievedRank = rankMatrix[currentLevel][gridSize];
+                    document.getElementById('rankBadgeIcon').innerText = achievedRank.icon;
+                    document.getElementById('rankTitle').innerText = `PROMOTED TO ${achievedRank.title.toUpperCase()}!`;
+
                     if (currentLevel === 5) {
-                        document.getElementById('winBoxHeading').innerText = '🥇 GRAND MISSION COMPLETED! 🥇';
+                        document.getElementById('winBoxHeading').innerText = '🥇 GRAND AVIATION CHAMPION! 🥇';
                         document.getElementById('certificateLabel').innerText = 'OFFICIAL AVIATION MEDAL';
-                        document.getElementById('rankBadgeIcon').innerText = '🏆';
-                        
-                        // احتساب الميدالية النهائية حسب الأداء التراكمي
-                        let totalStarsEarned = 0;
-                        for (let l = 1; l <= 5; l++) {
-                            totalStarsEarned += parseInt(localStorage.getItem(`stars_lvl_${l}`)) || 1;
-                        }
-
-                        let medalRank = "GOLD MEDAL CHAMPION 🥇";
-                        if (totalStarsEarned < 10) medalRank = "BRONZE MEDAL AVIATOR 🥉";
-                        else if (totalStarsEarned < 14) medalRank = "SILVER MEDAL AVIATOR 🥈";
-
-                        document.getElementById('rankTitle').innerText = medalRank;
-                        document.getElementById('nextStepNotice').innerHTML = `🎉 CONGRATULATIONS! You completed all stations in your Flyzen book!`;
+                        document.getElementById('nextStepNotice').innerHTML = `🎉 AMAZING WORK! You unlocked the highest rank for Station 5! Try mastering all stations on 5x5!`;
                     } else {
                         document.getElementById('winBoxHeading').innerText = '🎉 MISSION COMPLETED! 🎉';
                         document.getElementById('certificateLabel').innerText = 'FLIGHT PROMOTION';
-                        document.getElementById('rankBadgeIcon').innerText = currentLevel === 1 ? "👨‍✈️" : (currentLevel === 2 ? "✈️" : "🚀");
-                        if (currentConfig) document.getElementById('rankTitle').innerText = `PROMOTED TO ${currentConfig.rank.toUpperCase()}!`;
                         document.getElementById('nextStepNotice').innerHTML = `✈️ Scan the next QR code in your book to unlock Station ${currentLevel + 1}!`;
                     }
 
