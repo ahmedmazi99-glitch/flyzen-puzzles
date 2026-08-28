@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="google" content="notranslate">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Flyzen official Puzzle ✈️</title>
+    <title>Flyzen Official Puzzle ✈️</title>
     
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
@@ -101,10 +101,15 @@
         }
 
         /* 💎 إطار البزل ثلاثي الأبعاد الممتاز 💎 */
-        #puzzle-grid {
+        #puzzle-container {
+            position: relative;
             width: 100%;
             max-width: 360px;
             margin: 0 auto;
+        }
+
+        #puzzle-grid {
+            width: 100%;
             display: grid;
             gap: 6px;
             padding: 6px;
@@ -115,21 +120,17 @@
             position: relative;
             background-repeat: no-repeat;
             background-size: 100% 100%;
-            
-            /* 🔥 السطر المسؤول عن إجبار الصورة على الانحناء مع الإطار وحجب الأركان الحادة 🔥 */
-            overflow: hidden;
+            overflow: hidden; /* إجبار الصورة على الانحناء مع الإطار وحجب الأركان الحادة */
         }
 
-        /* 🧩 قطع البزل بحواف 3D انسيابية وحافة زجاجية S7 Edge 🧩 */
+        /* 🧩 قطع البزل 🧩 */
         .tile {
             cursor: pointer;
             border-radius: 12px;
             background-repeat: no-repeat;
             will-change: transform, box-shadow;
             touch-action: manipulation;
-            transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
-            
-            /* تأثير التجسيم واللمعان الدائري */
+            transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease, border-color 0.2s ease;
             box-shadow: 
                 inset 2px 2px 5px rgba(255, 255, 255, 0.75),
                 inset -2px -2px 5px rgba(0, 0, 0, 0.4),
@@ -137,9 +138,13 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
-        .tile:active {
-            transform: scale(0.96);
+        /* ✨ تمييز القطعة الصحيحة ✨ */
+        .tile.correct {
+            border: 1.5px solid #06D6A0 !important;
+            box-shadow: inset 0 0 8px rgba(6, 214, 160, 0.6), 0 4px 8px rgba(0,0,0,0.2) !important;
         }
+
+        .tile:active { transform: scale(0.96); }
 
         .tile.selected {
             transform: scale(1.05);
@@ -149,13 +154,13 @@
             filter: brightness(1.15);
         }
 
-        /* عند الحل: دمج كامل واختفاء الفواصل مع الانحناء الدائري للاطار */
+        /* عند الحل */
         #puzzle-grid.solved {
             gap: 0;
             padding: 0;
             border-color: #06D6A0 !important;
             box-shadow: 0 0 25px rgba(6, 214, 160, 0.6);
-            border-radius: 20px; /* الحفاظ على الانحناء */
+            border-radius: 20px;
         }
 
         #puzzle-grid.solved .tile { 
@@ -163,6 +168,34 @@
             box-shadow: none !important;
             border: none !important;
             cursor: default; 
+        }
+
+        /* 💡 طبقة التلميح المؤقتة 💡 */
+        #hint-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: 100% 100%;
+            border-radius: 20px;
+            z-index: 10;
+            pointer-events: none;
+            display: none;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            border: 4px solid #FFD166;
+        }
+
+        /* 🛡️ العلامة المائية المدمجة داخل إطار اللعبة 🛡️ */
+        .in-grid-watermark {
+            position: absolute;
+            bottom: 8px;
+            right: 12px;
+            font-size: 9px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.45);
+            letter-spacing: 1px;
+            pointer-events: none;
+            z-index: 6;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+            text-transform: uppercase;
         }
 
         .win-box {
@@ -200,26 +233,59 @@
             to { transform: scale(1.03); }
         }
 
-        .btn-group { display: flex; gap: 10px; margin-top: 14px; }
+        .btn-group { display: flex; gap: 8px; margin-top: 14px; width: 100%; justify-content: center; }
 
         .btn {
             background: #06D6A0;
             color: white;
             border: none;
-            padding: 10px 22px;
-            font-size: 15px;
+            padding: 10px 18px;
+            font-size: 14px;
             font-weight: 700;
             border-radius: 50px;
             cursor: pointer;
             box-shadow: 0 6px 15px rgba(6, 214, 160, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
 
-        .watermark {
-            margin-top: 12px;
+        .btn-secondary {
+            background: #38BDF8;
+            box-shadow: 0 6px 15px rgba(56, 189, 248, 0.3);
+        }
+
+        /* 🎖️ الشارة المعدنية الفاخرة للعلامة المائية (By Ahmed Mazighi) 🎖️ */
+        .author-badge {
+            margin-top: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            border: 1px solid rgba(56, 189, 248, 0.5);
+            border-radius: 30px;
+            color: #F8FAFC;
             font-size: 10px;
-            color: #94A3B8;
             font-weight: 700;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .author-badge::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(60deg, transparent 30%, rgba(255,255,255,0.18) 50%, transparent 70%);
+            transform: rotate(30deg);
+            animation: badgeShimmer 4s infinite;
+        }
+
+        @keyframes badgeShimmer {
+            0% { transform: translateX(-100%) rotate(30deg); }
+            100% { transform: translateX(100%) rotate(30deg); }
         }
     </style>
 </head>
@@ -242,7 +308,11 @@
             <button class="diff-btn" onclick="changeDifficulty(5, this)">Hard (5x5)</button>
         </div>
         
-        <div id="puzzle-grid"></div>
+        <div id="puzzle-container">
+            <div id="puzzle-grid"></div>
+            <div id="hint-overlay"></div>
+            <div class="in-grid-watermark">FLYZEN • AHMED MAZIGHI</div>
+        </div>
 
         <div id="winBox" class="win-box">
             <div id="batchRankBanner" class="batch-first-banner" style="display:none;"></div>
@@ -263,16 +333,20 @@
         </div>
 
         <div class="btn-group" id="btnGroup">
+            <button class="btn btn-secondary" onclick="triggerHint()">💡 Hint</button>
             <button class="btn" id="actionBtn" onclick="shuffleTiles()">🔄 Shuffle</button>
         </div>
 
-        <div class="watermark">© FLYZEN BY AHMED MAZIGHI</div>
+        <!-- 🌟 العلامة المائية المصممة كختم جودة ورتبة طيران 🌟 -->
+        <div class="author-badge">
+            <span>✈️</span>
+            <span>CREATED BY <strong>AHMED MAZIGHI</strong></span>
+        </div>
     </div>
 
     <img id="secret-source" style="display:none;" />
 
     <script>
-        // 🛡️ حماية الكود ضد Inspect / DevTools 🛡️
         document.addEventListener('keydown', function(e) {
             if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) {
                 e.preventDefault();
@@ -311,6 +385,7 @@
         const bestEl = document.getElementById('bestTime');
         const movesEl = document.getElementById('movesCount');
         const totalScoreEl = document.getElementById('totalScore');
+        const hintOverlay = document.getElementById('hint-overlay');
 
         let gridSize = 3;
         let currentOrder = [];
@@ -418,12 +493,29 @@
                 
                 tile.style.backgroundPosition = `${posX}% ${posY}%`;
 
+                // إضافة وهج للقطع الموجودة في موقعها الصحيح
+                if (pieceId === index && !grid.classList.contains('solved')) {
+                    tile.classList.add('correct');
+                } else {
+                    tile.classList.remove('correct');
+                }
+
                 if (selectedIndex === index) {
                     tile.classList.add('selected');
                 } else {
                     tile.classList.remove('selected');
                 }
             });
+        }
+
+        function triggerHint() {
+            if (grid.classList.contains('solved')) return;
+            hintOverlay.style.backgroundImage = `url('${imageName}')`;
+            hintOverlay.style.display = 'block';
+            playSound(300, 0.1);
+            setTimeout(() => {
+                hintOverlay.style.display = 'none';
+            }, 2500);
         }
 
         function initGame() {
@@ -483,7 +575,6 @@
             return currentOrder.every((val, index) => val === index);
         }
 
-        // ⏱️ توقيت مريح ومناسب للأطفال ⏱️
         function calculateStars() {
             let targetTime = gridSize === 3 ? 45 : (gridSize === 4 ? 90 : 180);
             if (secondsPassed <= targetTime) return '⭐⭐⭐';
