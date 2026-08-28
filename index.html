@@ -248,7 +248,9 @@
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        const passToken = urlParams.get('p') ? urlParams.get('p').toLowerCase() : null;
+        
+        // ⚡ دعم التخزين المؤقت لاستمرار الجلسة بعد التحديث ⚡
+        let passToken = urlParams.get('p') ? urlParams.get('p').toLowerCase() : sessionStorage.getItem('flyzen_active_token');
         const userKey = urlParams.get('key');
         const DEV_MASTER_KEY = "alpha1995";
 
@@ -266,7 +268,9 @@
 
         if (userKey === DEV_MASTER_KEY) {
             currentConfig = { level: currentLevel, img: `puzzle${currentLevel}.jpg`, title: "Dev Mode 🛠️", rank: "Master Aviator", badge: "👑" };
-        } else if (currentConfig) {
+        } else if (currentConfig && passToken) {
+            // حفظ التوكن في الجلسة لمنع القفل عند الـ Refresh
+            sessionStorage.setItem('flyzen_active_token', passToken);
             window.history.replaceState({}, document.title, window.location.pathname);
         }
 
@@ -289,7 +293,6 @@
         let timerInterval = null;
         let secondsPassed = 0;
 
-        // ⚡ تحسين الصوت الموحد ⚡
         let audioCtx = null;
         function getAudioContext() {
             if (!audioCtx) {
@@ -389,7 +392,6 @@
             grid.style.gridTemplateRows = `repeat(${gridSize}, 1fr)`;
         }
 
-        // ⚡ إنشاء العناصر مرة واحدة في الذاكرة لمنع البطء ⚡
         function createDOMGrid() {
             grid.innerHTML = '';
             tileElements = [];
