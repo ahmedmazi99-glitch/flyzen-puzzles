@@ -58,13 +58,20 @@
         
         .game-info {
             display: flex;
-            gap: 10px;
-            font-size: 12px;
+            gap: 8px;
+            font-size: 11px;
             font-weight: 700;
             color: #0284C7;
             margin-bottom: 10px;
             flex-wrap: wrap;
             justify-content: center;
+        }
+
+        .info-pill {
+            background: #E0F2FE;
+            padding: 4px 10px;
+            border-radius: 12px;
+            border: 1px solid #BAE6FD;
         }
 
         .diff-selector {
@@ -103,6 +110,7 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
             overflow: hidden;
             position: relative;
+            touch-action: none;
         }
 
         .tile {
@@ -141,7 +149,24 @@
             to { transform: scale(1); opacity: 1; }
         }
 
-        .stars { font-size: 26px; margin: 4px 0; }
+        .stars { font-size: 26px; margin: 2px 0; }
+
+        .batch-first-banner {
+            background: linear-gradient(90deg, #FFD166, #F59E0B);
+            color: #78350F;
+            font-weight: bold;
+            font-size: 13px;
+            padding: 6px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            box-shadow: 0 3px 8px rgba(245, 158, 11, 0.4);
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.03); }
+        }
 
         .btn-group {
             display: flex;
@@ -179,9 +204,10 @@
         <h1 id="levelTitle">Level 1: Sky Explorer 🧩</h1>
         
         <div class="game-info" id="gameInfo">
-            <span id="timer">⏱️ 00:00</span>
-            <span id="bestTime">🏆 Best: --:--</span>
-            <span id="movesCount">👆 Moves: 0</span>
+            <span class="info-pill" id="timer">⏱️ 00:00</span>
+            <span class="info-pill" id="bestTime">🏆 Best: --:--</span>
+            <span class="info-pill" id="movesCount">👆 Moves: 0</span>
+            <span class="info-pill" id="totalScore">⭐ XP: 0</span>
         </div>
 
         <div class="diff-selector" id="diffSelector">
@@ -193,12 +219,21 @@
         <div id="puzzle-grid"></div>
 
         <div id="winBox" class="win-box">
+            <div id="batchRankBanner" class="batch-first-banner" style="display:none;">
+                🥇 1ST IN YOUR BATCH! (NEW CLASS RECORD) 👑
+            </div>
+
             <h2 style="color: #FF477E; margin: 0; font-size: 20px;">🎉 MISSION COMPLETED! 🎉</h2>
             <div class="stars" id="starRating">⭐⭐⭐</div>
-            <div id="winStats" style="color: #0F766E; margin: 5px 0; font-size: 13px; font-weight: bold;"></div>
+            <div id="winStats" style="color: #0F766E; margin: 4px 0; font-size: 13px; font-weight: bold;"></div>
             
-            <div style="background: #FFF9DB; border: 2px dashed #F59E0B; border-radius: 12px; padding: 12px; margin-top: 10px;">
-                <p style="color: #78350F; font-size: 14px; margin: 0; font-weight: bold; line-height: 1.5;">
+            <!-- شهادة الترقية وسجل النقاط -->
+            <div style="background: linear-gradient(135deg, #FFF9DB 0%, #FEF3C7 100%); border: 3px dashed #F59E0B; border-radius: 16px; padding: 10px; margin-top: 8px;">
+                <div id="rankBadgeIcon" style="font-size: 32px; margin-bottom: 0;">🥉</div>
+                <div style="color: #92400E; font-size: 10px; font-weight: 700; letter-spacing: 1px;">FLIGHT PROMOTION CERTIFICATE</div>
+                <div id="rankTitle" style="color: #B45309; font-size: 15px; font-weight: bold; margin: 2px 0;">PROMOTED TO JUNIOR CO-PILOT!</div>
+                <div id="pointsEarned" style="color: #D97706; font-size: 13px; font-weight: bold; margin-bottom: 6px;">+0 XP EARNED</div>
+                <p style="color: #78350F; font-size: 12px; margin: 0; font-weight: bold; line-height: 1.3;">
                     ✈️ Head back to your book and solve the activities to unlock the next level!
                 </p>
             </div>
@@ -213,27 +248,24 @@
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        // تحويل الأحرف إلى صغيرة تلقائيًا لتفادي مشكلة A8f3k مقابل a8f3k
         const passToken = urlParams.get('p') ? urlParams.get('p').toLowerCase() : null;
         const userKey = urlParams.get('key');
         const DEV_MASTER_KEY = "alpha1995";
 
-        // خريطة الهاش العشوائي غير القابل للتخمين
         const secureDatabase = {
-            "a8f3k": { level: 1, img: "puzzle1.jpg", title: "Sky Explorer ✈️" },
-            "m2p9x": { level: 2, img: "puzzle2.jpg", title: "Cloud Navigator ☁️" },
-            "r7v1q": { level: 3, img: "puzzle3.jpg", title: "Jet Speedster 🚀" },
-            "x4b8w": { level: 4, img: "puzzle4.jpg", title: "Star Aviator 🌟" },
-            "e9t2z": { level: 5, img: "puzzle5.jpg", title: "Galaxy Captain 👨‍✈️" }
+            "a8f3k": { level: 1, img: "puzzle1.jpg", title: "Sky Explorer ✈️", rank: "Junior Co-Pilot", badge: "🥉" },
+            "m2p9x": { level: 2, img: "puzzle2.jpg", title: "Cloud Navigator ☁️", rank: "Flight Captain", badge: "🥈" },
+            "r7v1q": { level: 3, img: "puzzle3.jpg", title: "Jet Speedster 🚀", rank: "Senior Aviator", badge: "🥇" },
+            "x4b8w": { level: 4, img: "puzzle4.jpg", title: "Star Aviator 🌟", rank: "Wing Commander", badge: "🎖️" },
+            "e9t2z": { level: 5, img: "puzzle5.jpg", title: "Galaxy Captain 👨‍✈️", rank: "Chief Commander", badge: "👑" }
         };
 
         let currentConfig = secureDatabase[passToken];
         let currentLevel = currentConfig ? currentConfig.level : parseInt(urlParams.get('level')) || 1;
         let imageName = currentConfig ? currentConfig.img : (urlParams.get('img') || `puzzle${currentLevel}.jpg`);
 
-        // وضع المطور وإخفاء الرمز من شريط العنوان فور الفتح
         if (userKey === DEV_MASTER_KEY) {
-            currentConfig = { level: currentLevel, img: `puzzle${currentLevel}.jpg`, title: "Dev Mode 🛠️" };
+            currentConfig = { level: currentLevel, img: `puzzle${currentLevel}.jpg`, title: "Dev Mode 🛠️", rank: "Master Aviator", badge: "👑" };
         } else if (currentConfig) {
             window.history.replaceState({}, document.title, window.location.pathname);
         }
@@ -245,6 +277,7 @@
         const timerEl = document.getElementById('timer');
         const bestEl = document.getElementById('bestTime');
         const movesEl = document.getElementById('movesCount');
+        const totalScoreEl = document.getElementById('totalScore');
         const gameInfo = document.getElementById('gameInfo');
         const diffSelector = document.getElementById('diffSelector');
 
@@ -296,7 +329,7 @@
             return true;
         }
 
-        function updateBestTimeDisplay() {
+        function updateScoreDisplays() {
             const storageKey = `best_time_lvl_${currentLevel}_grid_${gridSize}`;
             const savedBest = localStorage.getItem(storageKey);
 
@@ -307,6 +340,9 @@
             } else {
                 bestEl.innerText = `🏆 Best: --:--`;
             }
+
+            const totalXP = localStorage.getItem('flyzen_total_xp') || 0;
+            totalScoreEl.innerText = `⭐ XP: ${totalXP}`;
         }
 
         function startTimer() {
@@ -345,7 +381,7 @@
             setupGridCSS();
             currentOrder = Array.from({length: gridSize * gridSize}, (_, i) => i);
             shuffleTiles();
-            updateBestTimeDisplay();
+            updateScoreDisplays();
         }
 
         hiddenImg.onerror = () => {
@@ -380,7 +416,10 @@
                 const posY = (origRow / (gridSize - 1)) * 100;
                 tile.style.backgroundPosition = `${posX}% ${posY}%`;
 
-                tile.onclick = () => handleTileClick(index);
+                tile.onpointerdown = (e) => {
+                    e.preventDefault();
+                    handleTileClick(index);
+                };
                 grid.appendChild(tile);
             });
         }
@@ -412,6 +451,7 @@
         function shuffleTiles() {
             grid.classList.remove('solved');
             winBox.style.display = 'none';
+            document.getElementById('batchRankBanner').style.display = 'none';
             actionBtn.innerText = '🔄 Shuffle';
             actionBtn.style.display = 'block';
             moves = 0;
@@ -441,27 +481,47 @@
                 stopTimer();
                 grid.classList.add('solved');
 
-                const storageKey = `best_time_lvl_${currentLevel}_grid_${gridSize}`;
-                const savedBest = localStorage.getItem(storageKey);
-                let isNewRecord = false;
+                // 1. حساب نقاط الفوز (Points Engine)
+                const basePoints = gridSize * 500;
+                const timePenalty = secondsPassed * 4;
+                const movesPenalty = moves * 3;
+                const earnedXP = Math.max(150, basePoints - timePenalty - movesPenalty);
 
-                if (!savedBest || secondsPassed < parseInt(savedBest)) {
-                    localStorage.setItem(storageKey, secondsPassed);
-                    isNewRecord = true;
-                    updateBestTimeDisplay();
+                // 2. تحديث إجمالي نقاط الطيار (Total XP)
+                let totalXP = parseInt(localStorage.getItem('flyzen_total_xp')) || 0;
+                totalXP += earnedXP;
+                localStorage.setItem('flyzen_total_xp', totalXP);
+
+                // 3. اختبار كسر الرقم القياسي (حساب "الأول على الدفعة")
+                const timeKey = `best_time_lvl_${currentLevel}_grid_${gridSize}`;
+                const savedBestTime = localStorage.getItem(timeKey);
+                let isBatchFirst = false;
+
+                if (!savedBestTime || secondsPassed < parseInt(savedBestTime)) {
+                    localStorage.setItem(timeKey, secondsPassed);
+                    isBatchFirst = true;
                 }
+
+                updateScoreDisplays();
 
                 setTimeout(() => {
                     playSound(800, 0.3);
-                    confetti({ particleCount: 130, spread: 85, origin: { y: 0.6 } });
-                    document.getElementById('starRating').innerText = calculateStars();
+                    confetti({ particleCount: 140, spread: 90, origin: { y: 0.6 } });
                     
-                    let statsHTML = `Time: ${secondsPassed}s | Moves: ${moves}`;
-                    if (isNewRecord) {
-                        statsHTML = `<div style="color: #D97706; font-size: 14px; margin-bottom: 4px;">👑 NEW RECORD! 👑</div>` + statsHTML;
+                    document.getElementById('starRating').innerText = calculateStars();
+                    document.getElementById('pointsEarned').innerText = `+${earnedXP} XP EARNED!`;
+                    
+                    if (isBatchFirst) {
+                        document.getElementById('batchRankBanner').style.display = 'block';
                     }
 
-                    document.getElementById('winStats').innerHTML = statsHTML;
+                    document.getElementById('winStats').innerHTML = `Time: ${secondsPassed}s | Moves: ${moves}`;
+
+                    if (currentConfig) {
+                        document.getElementById('rankBadgeIcon').innerText = currentConfig.badge || '🎖️';
+                        document.getElementById('rankTitle').innerText = `PROMOTED TO ${currentConfig.rank.toUpperCase()}!`;
+                    }
+
                     winBox.style.display = 'block';
                     actionBtn.innerText = '🔄 Play Again';
                     actionBtn.style.display = 'block';
