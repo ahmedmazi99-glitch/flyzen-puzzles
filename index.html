@@ -16,7 +16,7 @@
             user-select: none;
             -webkit-user-select: none;
             -webkit-tap-highlight-color: transparent;
-            touch-action: none; /* منع تمرير الشاشة أثناء سحب البزل */
+            touch-action: none;
         }
         
         body {
@@ -85,34 +85,32 @@
         }
 
         .map-node {
-            width: 32px;
-            height: 32px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
-            background: #CBD5E1;
+            background: #E2E8F0;
             color: #475569;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 700;
             position: relative;
             z-index: 2;
             border: 2px solid #FFFFFF;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
+            cursor: pointer;
         }
 
-        .map-node.diff-3 { background: #CD7F32 !important; color: white; border-color: #FDE68A; }
-        .map-node.diff-4 { background: #94A3B8 !important; color: white; border-color: #F1F5F9; }
-        .map-node.diff-5 { 
-            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important; 
-            color: white; 
-            border-color: #FEF08A;
-            box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+        .map-node.completed {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+            color: white;
+            border-color: #A7F3D0;
         }
 
         .map-node.active {
-            transform: scale(1.15);
+            transform: scale(1.2);
             border-color: #0284C7 !important;
             box-shadow: 0 0 12px rgba(2, 132, 199, 0.6);
         }
@@ -189,29 +187,28 @@
             margin: 0 auto;
         }
 
+        /* حماية الأبعاد الأصلية للصورة وتجنب فرض المربع */
         #puzzle-grid {
             width: 100%;
             display: grid;
-            gap: 5px;
+            gap: 4px;
             padding: 5px;
             background: #0F172A;
             border: 4px solid #0284C7;
             border-radius: 20px;
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
             position: relative;
-            background-repeat: no-repeat;
-            background-size: 100% 100%;
             overflow: hidden;
+            /* ستحدد نسبة الأبعاد تلقائياً عبر JavaScript عند تحميل الصورة */
         }
 
-        /* 🧩 عناصر البزل مع دعم الحركة السلسة 🧩 */
         .tile {
             cursor: grab;
-            border-radius: 10px;
+            border-radius: 8px;
             background-repeat: no-repeat;
             touch-action: none;
-            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.2s ease;
-            box-shadow: inset 2px 2px 4px rgba(255, 255, 255, 0.7), inset -2px -2px 4px rgba(0, 0, 0, 0.4), 0 4px 6px rgba(0,0,0,0.2);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            box-shadow: inset 2px 2px 4px rgba(255, 255, 255, 0.6), inset -2px -2px 4px rgba(0, 0, 0, 0.4), 0 3px 5px rgba(0,0,0,0.2);
             border: 1px solid rgba(255, 255, 255, 0.3);
             z-index: 2;
         }
@@ -221,7 +218,6 @@
             box-shadow: inset 0 0 8px rgba(16, 185, 129, 0.6) !important;
         }
 
-        /* التأثير المغناطيسي أثناء السحب الاحترافي */
         .tile.dragging {
             opacity: 0.9;
             transform: scale(1.1) rotate(2deg);
@@ -322,13 +318,13 @@
 
     <div class="card">
         <div class="flight-map-container">
-            <div class="map-title" id="mapTitle">FLYZEN EASY (3x3) PATH</div>
+            <div class="map-title" id="mapTitle">FLYZEN MISSION PATH</div>
             <div class="flight-path" id="flightPath">
-                <div class="map-node" id="node-1">1</div>
-                <div class="map-node" id="node-2">🔒</div>
-                <div class="map-node" id="node-3">🔒</div>
-                <div class="map-node" id="node-4">🔒</div>
-                <div class="map-node" id="node-5">🏆</div>
+                <div class="map-node" onclick="switchLevel(1)" id="node-1">1</div>
+                <div class="map-node" onclick="switchLevel(2)" id="node-2">2</div>
+                <div class="map-node" onclick="switchLevel(3)" id="node-3">3</div>
+                <div class="map-node" onclick="switchLevel(4)" id="node-4">4</div>
+                <div class="map-node" onclick="switchLevel(5)" id="node-5">5</div>
             </div>
         </div>
 
@@ -390,7 +386,6 @@
         const grid = document.getElementById('puzzle-grid');
         const hiddenImg = document.getElementById('secret-source');
         const winBox = document.getElementById('winBox');
-        const actionBtn = document.getElementById('actionBtn');
 
         let gridSize = 3;
         let currentOrder = [];
@@ -400,34 +395,94 @@
         let secondsPassed = 0;
         let selectedIndex = null;
 
-        /* 📳 مشغل الاهتزاز اللمسي الصوتي 📳 */
-        function triggerHaptic(type = 'tap') {
-            if ('vibrate' in navigator) {
-                if (type === 'tap') navigator.vibrate(15);
-                if (type === 'drop') navigator.vibrate([20, 30, 20]);
-                if (type === 'win') navigator.vibrate([100, 50, 100, 50, 200]);
+        /* 🔊 محرك الأصوات التفاعلي الداخلي (Web Audio API) 🔊 */
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'tap') {
+                osc.frequency.setValueAtTime(450, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(750, audioCtx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+            } else if (type === 'drop') {
+                osc.frequency.setValueAtTime(320, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(160, audioCtx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.08);
+            } else if (type === 'win') {
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                    const noteOsc = audioCtx.createOscillator();
+                    const noteGain = audioCtx.createGain();
+                    noteOsc.connect(noteGain);
+                    noteGain.connect(audioCtx.destination);
+                    noteOsc.frequency.value = freq;
+                    noteGain.gain.setValueAtTime(0.25, audioCtx.currentTime + idx * 0.09);
+                    noteGain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + idx * 0.09 + 0.22);
+                    noteOsc.start(audioCtx.currentTime + idx * 0.09);
+                    noteOsc.stop(audioCtx.currentTime + idx * 0.09 + 0.22);
+                });
             }
         }
 
-        function updateFlightMap() {
-            const diffName = gridSize === 3 ? "EASY (3x3)" : (gridSize === 4 ? "MEDIUM (4x4)" : "HARD (5x5)");
-            document.getElementById('mapTitle').innerText = `FLYZEN ${diffName} PATH`;
-            let maxUnlocked = parseInt(localStorage.getItem(`flyzen_max_unlocked_grid_${gridSize}`)) || 1;
+        /* 📳 مشغل الاهتزاز المباشر الموثوق 📳 */
+        function triggerHaptic(type = 'tap') {
+            playSound(type);
+            if ('vibrate' in navigator) {
+                try {
+                    if (type === 'tap') navigator.vibrate(20);
+                    if (type === 'drop') navigator.vibrate([25, 20, 25]);
+                    if (type === 'win') navigator.vibrate([80, 40, 80, 40, 150]);
+                } catch(e){}
+            }
+        }
 
+        /* 🏅 تحديث خريطة المستويات وظهور الميداليات 🏅 */
+        function updateFlightMap() {
             for (let i = 1; i <= 5; i++) {
                 const node = document.getElementById(`node-${i}`);
                 node.className = 'map-node';
-                let isDone = localStorage.getItem(`lvl_${i}_grid_${gridSize}_done`);
-                if (isDone) {
-                    node.classList.add(`diff-${gridSize}`);
-                    node.innerText = gridSize === 3 ? '🥉' : (gridSize === 4 ? '🥈' : '🥇');
-                } else if (i <= maxUnlocked) {
-                    node.innerText = i;
+                
+                // التأكد من حالة اكتمال المستوى لكل حجم
+                let done3 = localStorage.getItem(`lvl_${i}_grid_3_done`);
+                let done4 = localStorage.getItem(`lvl_${i}_grid_4_done`);
+                let done5 = localStorage.getItem(`lvl_${i}_grid_5_done`);
+
+                if (done5) {
+                    node.classList.add('completed');
+                    node.innerText = '🥇';
+                } else if (done4) {
+                    node.classList.add('completed');
+                    node.innerText = '🥈';
+                } else if (done3) {
+                    node.classList.add('completed');
+                    node.innerText = '🥉';
                 } else {
-                    node.innerText = i === 5 ? '🏆' : '🔒';
+                    node.innerText = i;
                 }
+
                 if (i === currentLevel) node.classList.add('active');
             }
+            updateTotalXPDisplay();
+            updateBestTimeDisplay();
+        }
+
+        function switchLevel(lvl) {
+            currentLevel = lvl;
+            imageName = `puzzle${currentLevel}.jpg`;
+            document.getElementById('levelTitle').innerText = `Level ${currentLevel}: Mission ${currentLevel} 🧩`;
+            updateRankTargetUI();
+            updateFlightMap();
+            loadAndSetImage();
         }
 
         function updateRankTargetUI() {
@@ -455,7 +510,6 @@
                 tile.style.backgroundImage = `url('${imageName}')`;
                 tile.style.backgroundSize = `${gridSize * 100}% ${gridSize * 100}%`;
                 
-                // 🖐️ إعداد محرك السحب والضغط الهجين 🖐️
                 setupHybridTouch(tile, i);
 
                 grid.appendChild(tile);
@@ -463,7 +517,6 @@
             }
         }
 
-        /* 🚀 محرك السحب والضغط الهجين (Hybrid Drag & Tap Engine) 🚀 */
         let draggedIndex = null;
         let startX = 0, startY = 0;
         let isDragging = false;
@@ -482,7 +535,7 @@
             tile.addEventListener('pointermove', (e) => {
                 if (draggedIndex === null || grid.classList.contains('solved')) return;
                 let dist = Math.hypot(e.clientX - startX, e.clientY - startY);
-                if (dist > 8) { // بدء تقنية السحب عند تجاوز المسافة الخفيفة
+                if (dist > 8) {
                     isDragging = true;
                     tile.classList.add('dragging');
                 }
@@ -494,7 +547,6 @@
                 tile.classList.remove('dragging');
 
                 if (isDragging) {
-                    // العثور على العنصر المستهدف أسفل إصبع الطفل
                     let dropTarget = document.elementFromPoint(e.clientX, e.clientY);
                     let targetTile = dropTarget ? dropTarget.closest('.tile') : null;
                     if (targetTile) {
@@ -505,7 +557,6 @@
                         }
                     }
                 } else {
-                    // في حال الضغط الخفيف (Tap)
                     handleTap(draggedIndex);
                 }
                 draggedIndex = null;
@@ -520,6 +571,7 @@
             } else {
                 swapPieces(selectedIndex, index);
                 selectedIndex = null;
+                triggerHaptic('drop');
             }
             updateGridUI();
         }
@@ -556,8 +608,21 @@
             });
         }
 
+        function loadAndSetImage() {
+            hiddenImg.onload = () => {
+                // ضبط أبعاد الشبكة لتطابق نسبة الصورة الأصلية تماماً ودون فرض المربع
+                const aspectRatio = hiddenImg.naturalWidth / hiddenImg.naturalHeight || (8.375 / 11.25);
+                grid.style.aspectRatio = `${aspectRatio}`;
+                initGame();
+            };
+            hiddenImg.onerror = () => {
+                grid.style.aspectRatio = `8.375 / 11.25`;
+                initGame();
+            };
+            hiddenImg.src = imageName;
+        }
+
         function initGame() {
-            grid.style.aspectRatio = `1 / 1`;
             grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
             grid.style.gridTemplateRows = `repeat(${gridSize}, 1fr)`;
             createDOMGrid();
@@ -590,10 +655,28 @@
         }
 
         function triggerHint() {
+            triggerHaptic('tap');
             const hintOverlay = document.getElementById('hint-overlay');
             hintOverlay.style.backgroundImage = `url('${imageName}')`;
             hintOverlay.style.display = 'block';
             setTimeout(() => { hintOverlay.style.display = 'none'; }, 2500);
+        }
+
+        /* 📊 نظام حساب ونشر نقاط ה-XP والريكورد 📊 */
+        function updateTotalXPDisplay() {
+            let totalXP = parseInt(localStorage.getItem('flyzen_total_xp')) || 0;
+            document.getElementById('totalScore').innerText = `⭐ XP: ${totalXP}`;
+        }
+
+        function updateBestTimeDisplay() {
+            let best = localStorage.getItem(`best_time_lvl_${currentLevel}_grid_${gridSize}`);
+            if (best) {
+                const m = String(Math.floor(best / 60)).padStart(2, '0');
+                const s = String(best % 60).padStart(2, '0');
+                document.getElementById('bestTime').innerText = `🏆 Best: ${m}:${s}`;
+            } else {
+                document.getElementById('bestTime').innerText = `🏆 Best: --:--`;
+            }
         }
 
         function checkWin() {
@@ -602,13 +685,39 @@
                 grid.classList.add('solved');
                 triggerHaptic('win');
                 confetti({ particleCount: 150, spread: 90 });
+
+                // 1. تسجيل الفوز وحفظ الميدالية
                 localStorage.setItem(`lvl_${currentLevel}_grid_${gridSize}_done`, 'true');
+
+                // 2. حساب وحفظ الريكورد وأفضل وقت
+                let currentBest = localStorage.getItem(`best_time_lvl_${currentLevel}_grid_${gridSize}`);
+                if (!currentBest || secondsPassed < parseInt(currentBest)) {
+                    localStorage.setItem(`best_time_lvl_${currentLevel}_grid_${gridSize}`, secondsPassed);
+                }
+
+                // 3. حساب نقاط الـ XP المكتسبة
+                let basePoints = gridSize * 150;
+                let timeBonus = Math.max(10, 300 - secondsPassed * 2);
+                let moveBonus = Math.max(10, 200 - moves * 3);
+                let earnedXP = basePoints + timeBonus + moveBonus;
+
+                let currentTotalXP = parseInt(localStorage.getItem('flyzen_total_xp')) || 0;
+                localStorage.setItem('flyzen_total_xp', currentTotalXP + earnedXP);
+
+                // 4. عرض النتيجة والرتبة في واجهة الفوز
+                const rankInfo = rankMatrix[currentLevel][gridSize];
+                document.getElementById('rankBadgeIcon').innerText = rankInfo.icon;
+                document.getElementById('rankTitle').innerText = rankInfo.title.toUpperCase();
+                document.getElementById('pointsEarned').innerText = `+${earnedXP} XP EARNED!`;
+                document.getElementById('winStats').innerText = `⏱️ Time: ${secondsPassed}s | 👆 Moves: ${moves}`;
+                
                 winBox.style.display = 'block';
+                updateFlightMap();
             }
         }
 
-        hiddenImg.onload = () => initGame();
-        hiddenImg.src = imageName;
+        // إطلاق اللعبة
+        loadAndSetImage();
     </script>
 </body>
 </html>
