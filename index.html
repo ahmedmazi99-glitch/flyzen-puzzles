@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="google" content="notranslate">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Flyzen official puzzle ✈️</title>
+    <title>Flyzen offcial Puzzle ✈️</title>
     
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
@@ -34,7 +34,7 @@
         .card {
             background: #ffffff;
             border-radius: 28px;
-            padding: 18px 14px;
+            padding: 20px 16px;
             box-shadow: 0 20px 50px rgba(0, 40, 90, 0.35);
             max-width: 440px;
             width: 100%;
@@ -42,6 +42,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            margin: 0 auto;
             position: relative;
         }
 
@@ -52,15 +53,15 @@
             border-radius: 20px;
             font-size: 12px;
             font-weight: 700;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             letter-spacing: 0.5px;
         }
 
-        h1 { color: #1E293B; font-size: 19px; margin: 0 0 6px 0; }
+        h1 { color: #1E293B; font-size: 20px; margin: 0 0 6px 0; }
         
         .game-info {
             display: flex;
-            gap: 6px;
+            gap: 8px;
             font-size: 11px;
             font-weight: 700;
             color: #0284C7;
@@ -79,14 +80,14 @@
         .diff-selector {
             display: flex;
             gap: 8px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .diff-btn {
             background: #F1F5F9;
             border: 2px solid #CBD5E1;
             color: #475569;
-            padding: 5px 12px;
+            padding: 6px 12px;
             border-radius: 12px;
             font-size: 12px;
             font-weight: 700;
@@ -99,24 +100,69 @@
             color: #78350F;
         }
 
-        /* 🧩 إطار الكانفاس الحاوي للبزل 🧩 */
-        #canvas-wrapper {
-            width: 100%;
-            max-width: 360px;
-            margin: 0 auto;
-            position: relative;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
-            border: 4px solid #38BDF8;
-            background: #0F172A;
+        /* 💎 إطار البزل ثلاثي الأبعاد الممتاز 💎 */
+#puzzle-grid {
+    width: 100%;
+    max-width: 360px;
+    margin: 0 auto;
+    display: grid;
+    gap: 6px;
+    padding: 6px;
+    background: #0F172A;
+    border: 4px solid #38BDF8;
+    border-radius: 20px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3), inset 0 0 15px rgba(0, 0, 0, 0.5);
+    position: relative;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    /* 🔥 السطر المسؤول عن إجبار الصورة على الانحناء مع الإطار وحجب الأركان الحادة 🔥 */
+    overflow: hidden; 
+}
+    
+
+        /* 🧩 قطع البزل بحواف 3D انسيابية وحافة زجاجية S7 Edge 🧩 */
+        .tile {
+            cursor: pointer;
+            border-radius: 12px;
+            background-repeat: no-repeat;
+            will-change: transform, box-shadow;
+            touch-action: manipulation;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+            
+            /* تأثير التجسيم واللمعان الدائري */
+            box-shadow: 
+                inset 2px 2px 5px rgba(255, 255, 255, 0.75),
+                inset -2px -2px 5px rgba(0, 0, 0, 0.4),
+                0 4px 8px rgba(0,0,0,0.25);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
-        canvas {
-            display: block;
-            width: 100%;
-            height: auto;
-            cursor: pointer;
+        .tile:active {
+            transform: scale(0.96);
+        }
+
+        .tile.selected {
+            transform: scale(1.05);
+            z-index: 5;
+            outline: 3px solid #FF477E;
+            box-shadow: 0 10px 20px rgba(255, 71, 126, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.9);
+            filter: brightness(1.15);
+        }
+
+        /* عند الحل: دمج كامل واختفاء الفواصل مع الانحناء الدائري للاطار */
+#puzzle-grid.solved {
+    gap: 0;
+    padding: 0;
+    border-color: #06D6A0 !important;
+    box-shadow: 0 0 25px rgba(6, 214, 160, 0.6);
+    border-radius: 20px; /* الحفاظ على الانحناء */
+}
+        }
+        #puzzle-grid.solved .tile { 
+            border-radius: 0;
+            box-shadow: none !important;
+            border: none !important;
+            cursor: default; 
         }
 
         .win-box {
@@ -126,7 +172,7 @@
             border: 3px solid #06D6A0;
             border-radius: 20px;
             padding: 14px;
-            margin-top: 12px;
+            margin-top: 14px;
             animation: popIn 0.3s ease;
         }
 
@@ -141,21 +187,27 @@
             background: linear-gradient(90deg, #FFD166, #F59E0B);
             color: #78350F;
             font-weight: bold;
-            font-size: 11px;
-            padding: 5px;
+            font-size: 12px;
+            padding: 6px;
             border-radius: 10px;
             margin-bottom: 8px;
             box-shadow: 0 3px 8px rgba(245, 158, 11, 0.4);
+            animation: pulse 1.5s infinite alternate;
         }
 
-        .btn-group { display: flex; gap: 10px; margin-top: 12px; }
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.03); }
+        }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 14px; }
 
         .btn {
             background: #06D6A0;
             color: white;
             border: none;
             padding: 10px 22px;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 700;
             border-radius: 50px;
             cursor: pointer;
@@ -163,7 +215,7 @@
         }
 
         .watermark {
-            margin-top: 10px;
+            margin-top: 12px;
             font-size: 10px;
             color: #94A3B8;
             font-weight: 700;
@@ -174,7 +226,7 @@
 <body oncontextmenu="return false;">
 
     <div class="card">
-        <span class="badge">✈️ FLYZEN REAL 3D JIGSAW</span>
+        <span class="badge">✈️ FLYZEN OFFICIAL ACTIVITY</span>
         <h1 id="levelTitle">Level 1: Sky Explorer 🧩</h1>
         
         <div class="game-info" id="gameInfo">
@@ -184,42 +236,43 @@
             <span class="info-pill" id="totalScore">⭐ XP: 0</span>
         </div>
 
-        <div class="diff-selector">
+        <div class="diff-selector" id="diffSelector">
             <button class="diff-btn active" onclick="changeDifficulty(3, this)">Easy (3x3)</button>
             <button class="diff-btn" onclick="changeDifficulty(4, this)">Medium (4x4)</button>
             <button class="diff-btn" onclick="changeDifficulty(5, this)">Hard (5x5)</button>
         </div>
         
-        <div id="canvas-wrapper">
-            <canvas id="jigsawCanvas"></canvas>
-        </div>
+        <div id="puzzle-grid"></div>
 
         <div id="winBox" class="win-box">
             <div id="batchRankBanner" class="batch-first-banner" style="display:none;"></div>
-            <h2 style="color: #FF477E; margin: 0; font-size: 19px;">🎉 MISSION COMPLETED! 🎉</h2>
+
+            <h2 style="color: #FF477E; margin: 0; font-size: 20px;">🎉 MISSION COMPLETED! 🎉</h2>
             <div class="stars" id="starRating">⭐⭐⭐</div>
-            <div id="winStats" style="color: #0F766E; margin: 4px 0; font-size: 12px; font-weight: bold;"></div>
+            <div id="winStats" style="color: #0F766E; margin: 4px 0; font-size: 13px; font-weight: bold;"></div>
             
             <div style="background: linear-gradient(135deg, #FFF9DB 0%, #FEF3C7 100%); border: 3px dashed #F59E0B; border-radius: 16px; padding: 10px; margin-top: 8px;">
-                <div id="rankBadgeIcon" style="font-size: 30px; margin-bottom: 0;">🥇</div>
+                <div id="rankBadgeIcon" style="font-size: 32px; margin-bottom: 0;">🥇</div>
                 <div style="color: #92400E; font-size: 10px; font-weight: 700; letter-spacing: 1px;">FLIGHT PROMOTION CERTIFICATE</div>
-                <div id="rankTitle" style="color: #B45309; font-size: 14px; font-weight: bold; margin: 2px 0;">PROMOTED TO JUNIOR CO-PILOT!</div>
-                <div id="pointsEarned" style="color: #D97706; font-size: 12px; font-weight: bold; margin-bottom: 4px;">+0 XP EARNED</div>
-                <p style="color: #78350F; font-size: 11px; margin: 0; font-weight: bold; line-height: 1.3;">
+                <div id="rankTitle" style="color: #B45309; font-size: 15px; font-weight: bold; margin: 2px 0;">PROMOTED TO JUNIOR CO-PILOT!</div>
+                <div id="pointsEarned" style="color: #D97706; font-size: 13px; font-weight: bold; margin-bottom: 6px;">+0 XP EARNED</div>
+                <p style="color: #78350F; font-size: 12px; margin: 0; font-weight: bold; line-height: 1.3;">
                     ✈️ Head back to your book and solve the activities to unlock the next level!
                 </p>
             </div>
         </div>
 
-        <div class="btn-group">
+        <div class="btn-group" id="btnGroup">
             <button class="btn" id="actionBtn" onclick="shuffleTiles()">🔄 Shuffle</button>
         </div>
 
         <div class="watermark">© FLYZEN BY AHMED MAZIGHI</div>
     </div>
 
+    <img id="secret-source" style="display:none;" />
+
     <script>
-        // 🛡️ حماية ضد الكشف والتفتيش (Anti-DevTools) 🛡️
+        // 🛡️ حماية الكود ضد Inspect / DevTools 🛡️
         document.addEventListener('keydown', function(e) {
             if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) {
                 e.preventDefault();
@@ -250,262 +303,179 @@
             window.history.replaceState({}, document.title, window.location.pathname);
         }
 
-        document.getElementById('levelTitle').innerText = `Level ${currentLevel}: ${currentConfig ? currentConfig.title : "Sky Puzzle ✈️"}`;
-
-        const canvas = document.getElementById('jigsawCanvas');
-        const ctx = canvas.getContext('2d');
+        const grid = document.getElementById('puzzle-grid');
+        const hiddenImg = document.getElementById('secret-source');
         const winBox = document.getElementById('winBox');
         const actionBtn = document.getElementById('actionBtn');
+        const timerEl = document.getElementById('timer');
+        const bestEl = document.getElementById('bestTime');
+        const movesEl = document.getElementById('movesCount');
+        const totalScoreEl = document.getElementById('totalScore');
 
-        let rows = 3, cols = 3;
-        let pieces = [];
+        let gridSize = 3;
         let currentOrder = [];
+        let tileElements = [];
         let selectedIndex = null;
         let moves = 0;
-        let secondsPassed = 0;
         let timerInterval = null;
-        let isSolved = false;
-        let img = new Image();
+        let secondsPassed = 0;
 
-        let boardW = 360, boardH = 360;
-        let pieceW = 120, pieceH = 120;
-
-        // 🔊 الصوتيات والتأثيرات 🔊
         let audioCtx = null;
+        function getAudioContext() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            return audioCtx;
+        }
+
         function playSound(freq, duration = 0.08) {
             try {
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
                 osc.connect(gain);
-                gain.connect(audioCtx.destination);
+                gain.connect(ctx.destination);
                 osc.start();
-                osc.stop(audioCtx.currentTime + duration);
+                osc.stop(ctx.currentTime + duration);
             } catch(e) {}
         }
 
-        img.onload = () => initGame();
-        img.src = imageName;
+        document.getElementById('levelTitle').innerText = `Level ${currentLevel}: ${currentConfig ? currentConfig.title : "Sky Puzzle ✈️"}`;
+
+        function updateScoreDisplays() {
+            const savedBest = localStorage.getItem(`best_time_lvl_${currentLevel}_grid_${gridSize}`);
+            if (savedBest) {
+                const m = String(Math.floor(savedBest / 60)).padStart(2, '0');
+                const s = String(savedBest % 60).padStart(2, '0');
+                bestEl.innerText = `🏆 Best: ${m}:${s}`;
+            } else {
+                bestEl.innerText = `🏆 Best: --:--`;
+            }
+
+            const totalXP = localStorage.getItem('flyzen_total_xp') || 0;
+            totalScoreEl.innerText = `⭐ XP: ${totalXP}`;
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            secondsPassed = 0;
+            timerEl.innerText = '⏱️ 00:00';
+            timerInterval = setInterval(() => {
+                secondsPassed++;
+                const m = String(Math.floor(secondsPassed / 60)).padStart(2, '0');
+                const s = String(secondsPassed % 60).padStart(2, '0');
+                timerEl.innerText = `⏱️ ${m}:${s}`;
+            }, 1000);
+        }
 
         function changeDifficulty(size, btn) {
-            rows = size;
-            cols = size;
+            gridSize = size;
             document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             initGame();
         }
 
+        function setupGridCSS() {
+            const aspectW = hiddenImg.naturalWidth || 1;
+            const aspectH = hiddenImg.naturalHeight || 1;
+            grid.style.aspectRatio = `${aspectW} / ${aspectH}`;
+            grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+            grid.style.gridTemplateRows = `repeat(${gridSize}, 1fr)`;
+        }
+
+        function createDOMGrid() {
+            grid.innerHTML = '';
+            tileElements = [];
+            const total = gridSize * gridSize;
+
+            for (let i = 0; i < total; i++) {
+                const tile = document.createElement('div');
+                tile.className = 'tile';
+                tile.style.backgroundImage = `url('${imageName}')`;
+                tile.style.backgroundSize = `${gridSize * 100}% ${gridSize * 100}%`;
+
+                tile.addEventListener('pointerdown', (e) => {
+                    e.preventDefault();
+                    handleTileClick(i);
+                });
+
+                grid.appendChild(tile);
+                tileElements.push(tile);
+            }
+        }
+
+        function updateGridUI() {
+            tileElements.forEach((tile, index) => {
+                const pieceId = currentOrder[index];
+                const origCol = pieceId % gridSize;
+                const origRow = Math.floor(pieceId / gridSize);
+
+                const posX = (origCol / (gridSize - 1)) * 100;
+                const posY = (origRow / (gridSize - 1)) * 100;
+                
+                tile.style.backgroundPosition = `${posX}% ${posY}%`;
+
+                if (selectedIndex === index) {
+                    tile.classList.add('selected');
+                } else {
+                    tile.classList.remove('selected');
+                }
+            });
+        }
+
         function initGame() {
-            const containerW = document.getElementById('canvas-wrapper').clientWidth || 360;
-            boardW = containerW;
-            boardH = containerW * (img.naturalHeight / img.naturalWidth);
-
-            const dpr = window.devicePixelRatio || 1;
-            canvas.width = boardW * dpr;
-            canvas.height = boardH * dpr;
-            ctx.scale(dpr, dpr);
-
-            pieceW = boardW / cols;
-            pieceH = boardH / rows;
-
-            generatePieces();
+            setupGridCSS();
+            createDOMGrid();
+            currentOrder = Array.from({length: gridSize * gridSize}, (_, i) => i);
             shuffleTiles();
             updateScoreDisplays();
         }
 
-        // 🧩 رسم نتوءات البزل التشابكية الهندسية الاحترافية 🧩
-        function generatePieces() {
-            pieces = [];
-            // إنشاء مصفوفة حواف متطابقة لتتداخل القطع تماماً
-            let hEdges = Array.from({length: rows - 1}, () => Array.from({length: cols}, () => Math.random() < 0.5 ? 1 : -1));
-            let vEdges = Array.from({length: rows}, () => Array.from({length: cols - 1}, () => Math.random() < 0.5 ? 1 : -1));
+        hiddenImg.onload = () => initGame();
+        hiddenImg.src = imageName;
 
-            for (let r = 0; r < rows; r++) {
-                for (let c = 0; c < cols; c++) {
-                    let edges = {
-                        top: r === 0 ? 0 : -hEdges[r - 1][c],
-                        right: c === cols - 1 ? 0 : vEdges[r][c],
-                        bottom: r === rows - 1 ? 0 : hEdges[r][c],
-                        left: c === 0 ? 0 : -vEdges[r][c - 1]
-                    };
+        function handleTileClick(index) {
+            if (grid.classList.contains('solved')) return;
 
-                    pieces.push({
-                        id: r * cols + c,
-                        origR: r,
-                        origC: c,
-                        edges
-                    });
-                }
-            }
-        }
-
-        function drawJigsawEdge(ctx, x1, y1, x2, y2, tab) {
-            if (tab === 0) {
-                ctx.lineTo(x2, y2);
-                return;
-            }
-            const dx = x2 - x1;
-            const dy = y2 - y1;
-            const l = Math.hypot(dx, dy);
-            const uX = dx / l;
-            const uY = dy / l;
-            const nX = -uY * tab;
-            const nY = uX * tab;
-
-            const q1X = x1 + uX * l * 0.35;
-            const q1Y = y1 + uY * l * 0.35;
-            const q2X = x1 + uX * l * 0.65;
-            const q2Y = y1 + uY * l * 0.65;
-
-            const neckDepth = l * 0.04;
-            const k1X = q1X - nX * neckDepth;
-            const k1Y = q1Y - nY * neckDepth;
-            const k2X = q2X - nX * neckDepth;
-            const k2Y = q2Y - nY * neckDepth;
-
-            const bulbH = l * 0.18;
-            const bulbW = l * 0.16;
-
-            const cX = x1 + uX * l * 0.5 + nX * bulbH;
-            const cY = y1 + uY * l * 0.5 + nY * bulbH;
-
-            const b1X = cX - uX * bulbW;
-            const b1Y = cY - uY * bulbW;
-            const b2X = cX + uX * bulbW;
-            const b2Y = cY + uY * bulbW;
-
-            ctx.lineTo(q1X, q1Y);
-            ctx.bezierCurveTo(k1X, k1Y, b1X - nX * (bulbH * 0.3), b1Y - nY * (bulbH * 0.3), b1X, b1Y);
-            ctx.bezierCurveTo(b1X + nX * (bulbH * 0.6), b1Y + nY * (bulbH * 0.6), b2X + nX * (bulbH * 0.6), b2Y + nY * (bulbH * 0.6), b2X, b2Y);
-            ctx.bezierCurveTo(b2X - nX * (bulbH * 0.3), b2Y - nY * (bulbH * 0.3), k2X, k2Y, q2X, q2Y);
-            ctx.lineTo(x2, y2);
-        }
-
-        function drawPiecePath(ctx, x, y, w, h, edges) {
-            ctx.beginPath();
-            ctx.moveTo(x, y);
-            drawJigsawEdge(ctx, x, y, x + w, y, edges.top);
-            drawJigsawEdge(ctx, x + w, y, x + w, y + h, edges.right);
-            drawJigsawEdge(ctx, x + w, y + h, x, y + h, edges.bottom);
-            drawJigsawEdge(ctx, x, y + h, x, y, edges.left);
-            ctx.closePath();
-        }
-
-        function render() {
-            ctx.clearRect(0, 0, boardW, boardH);
-
-            if (isSolved) {
-                ctx.drawImage(img, 0, 0, boardW, boardH);
-                return;
-            }
-
-            // خلفية اللوحة الشبكية
-            ctx.fillStyle = "#0F172A";
-            ctx.fillRect(0, 0, boardW, boardH);
-
-            // رسم القطع المبعثرة بالترتيب الحالي
-            currentOrder.forEach((pieceIdx, gridIdx) => {
-                const p = pieces[pieceIdx];
-                const gridR = Math.floor(gridIdx / cols);
-                const gridC = gridIdx % cols;
-
-                const x = gridC * pieceW;
-                const y = gridR * pieceH;
-
-                ctx.save();
+            if (selectedIndex === null) {
+                selectedIndex = index;
+                playSound(400);
+                updateGridUI();
+            } else if (selectedIndex === index) {
+                selectedIndex = null;
+                updateGridUI();
+            } else {
+                let temp = currentOrder[selectedIndex];
+                currentOrder[selectedIndex] = currentOrder[index];
+                currentOrder[index] = temp;
                 
-                // قص الحافة ورسم النتوء
-                drawPiecePath(ctx, x, y, pieceW, pieceH, p.edges);
-                ctx.clip();
-
-                // عينات امتداد تفاصيل الصورة لحساب النتوءات الخارجة (Bleed Sampling)
-                const bleedW = pieceW * 0.3;
-                const bleedH = pieceH * 0.3;
-
-                const srcW = img.naturalWidth / cols;
-                const srcH = img.naturalHeight / rows;
-                const srcX = p.origC * srcW;
-                const srcY = p.origR * srcH;
-
-                ctx.drawImage(
-                    img,
-                    srcX - srcW * 0.3, srcY - srcH * 0.3, srcW * 1.6, srcH * 1.6,
-                    x - bleedW, y - bleedH, pieceW * 1.6, pieceH * 1.6
-                );
-
-                // إطار 3D وانعكاس ضوئي زجاجي عريض
-                ctx.restore();
-                ctx.save();
-                drawPiecePath(ctx, x, y, pieceW, pieceH, p.edges);
-
-                if (selectedIndex === gridIdx) {
-                    ctx.strokeStyle = "#FF477E";
-                    ctx.lineWidth = 4;
-                    ctx.shadowColor = "rgba(255, 71, 126, 0.8)";
-                    ctx.shadowBlur = 12;
-                } else {
-                    ctx.strokeStyle = "rgba(255, 255, 255, 0.65)";
-                    ctx.lineWidth = 2;
-                    ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
-                    ctx.shadowBlur = 4;
-                    ctx.shadowOffsetY = 2;
-                }
-                ctx.stroke();
-                ctx.restore();
-            });
-        }
-
-        // --- التفاعل والتحريك برمجياً ---
-        canvas.addEventListener('pointerdown', (e) => {
-            if (isSolved) return;
-            const rect = canvas.getBoundingClientRect();
-            const clickX = (e.clientX - rect.left) * (boardW / rect.width);
-            const clickY = (e.clientY - rect.top) * (boardH / rect.height);
-
-            const c = Math.floor(clickX / pieceW);
-            const r = Math.floor(clickY / pieceH);
-            const clickedIdx = r * cols + c;
-
-            if (clickedIdx >= 0 && clickedIdx < currentOrder.length) {
-                if (selectedIndex === null) {
-                    selectedIndex = clickedIdx;
-                    playSound(400);
-                } else if (selectedIndex === clickedIdx) {
-                    selectedIndex = null;
-                } else {
-                    let temp = currentOrder[selectedIndex];
-                    currentOrder[selectedIndex] = currentOrder[clickedIdx];
-                    currentOrder[clickedIdx] = temp;
-
-                    selectedIndex = null;
-                    moves++;
-                    document.getElementById('movesCount').innerText = `👆 Moves: ${moves}`;
-                    playSound(600);
-                    checkWin();
-                }
-                render();
+                selectedIndex = null;
+                moves++;
+                movesEl.innerText = `👆 Moves: ${moves}`;
+                playSound(600);
+                updateGridUI();
+                checkWin();
             }
-        });
+        }
 
         function shuffleTiles() {
-            isSolved = false;
+            grid.classList.remove('solved');
+            grid.style.backgroundImage = 'none';
             winBox.style.display = 'none';
             document.getElementById('batchRankBanner').style.display = 'none';
             actionBtn.innerText = '🔄 Shuffle';
             moves = 0;
-            document.getElementById('movesCount').innerText = `👆 Moves: 0`;
+            movesEl.innerText = `👆 Moves: 0`;
             
             do {
-                currentOrder = Array.from({length: rows * cols}, (_, i) => i).sort(() => Math.random() - 0.5);
+                currentOrder.sort(() => Math.random() - 0.5);
             } while (checkSolved());
-
+            
             selectedIndex = null;
-            render();
+            updateGridUI();
             startTimer();
         }
 
@@ -513,50 +483,25 @@
             return currentOrder.every((val, index) => val === index);
         }
 
-        function startTimer() {
-            clearInterval(timerInterval);
-            secondsPassed = 0;
-            document.getElementById('timer').innerText = '⏱️ 00:00';
-            timerInterval = setInterval(() => {
-                secondsPassed++;
-                const m = String(Math.floor(secondsPassed / 60)).padStart(2, '0');
-                const s = String(secondsPassed % 60).padStart(2, '0');
-                document.getElementById('timer').innerText = `⏱️ ${m}:${s}`;
-            }, 1000);
-        }
-
+        // ⏱️ توقيت مريح ومناسب للأطفال ⏱️
         function calculateStars() {
-            let limit = cols === 3 ? 45 : (cols === 4 ? 90 : 180);
-            if (secondsPassed <= limit) return '⭐⭐⭐';
-            if (secondsPassed <= limit * 1.5) return '⭐⭐';
+            let targetTime = gridSize === 3 ? 45 : (gridSize === 4 ? 90 : 180);
+            if (secondsPassed <= targetTime) return '⭐⭐⭐';
+            if (secondsPassed <= targetTime * 1.5) return '⭐⭐';
             return '⭐';
-        }
-
-        function updateScoreDisplays() {
-            const savedBest = localStorage.getItem(`best_time_lvl_${currentLevel}_grid_${cols}`);
-            if (savedBest) {
-                const m = String(Math.floor(savedBest / 60)).padStart(2, '0');
-                const s = String(savedBest % 60).padStart(2, '0');
-                document.getElementById('bestTime').innerText = `🏆 Best: ${m}:${s}`;
-            } else {
-                document.getElementById('bestTime').innerText = `🏆 Best: --:--`;
-            }
-
-            const totalXP = localStorage.getItem('flyzen_total_xp') || 0;
-            document.getElementById('totalScore').innerText = `⭐ XP: ${totalXP}`;
         }
 
         function checkWin() {
             if (checkSolved()) {
                 clearInterval(timerInterval);
-                isSolved = true;
-                render();
+                grid.classList.add('solved');
+                grid.style.backgroundImage = `url('${imageName}')`;
 
-                let earnedXP = Math.max(200, (cols * 600) - (secondsPassed * 2));
+                let earnedXP = Math.max(200, (gridSize * 600) - (secondsPassed * 2));
                 let totalXP = (parseInt(localStorage.getItem('flyzen_total_xp')) || 0) + earnedXP;
                 localStorage.setItem('flyzen_total_xp', totalXP);
 
-                const timeKey = `best_time_lvl_${currentLevel}_grid_${cols}`;
+                const timeKey = `best_time_lvl_${currentLevel}_grid_${gridSize}`;
                 const savedBestTime = localStorage.getItem(timeKey);
                 if (!savedBestTime || secondsPassed < parseInt(savedBestTime)) {
                     localStorage.setItem(timeKey, secondsPassed);
