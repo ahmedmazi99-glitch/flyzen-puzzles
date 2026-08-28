@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="google" content="notranslate">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Flyzen offcial Puzzle ✈️</title>
+    <title>Flyzen official Puzzle ✈️</title>
     
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
@@ -101,24 +101,21 @@
         }
 
         /* 💎 إطار البزل ثلاثي الأبعاد الممتاز 💎 */
-#puzzle-grid {
-    width: 100%;
-    max-width: 360px;
-    margin: 0 auto;
-    display: grid;
-    gap: 6px;
-    padding: 6px;
-    background: #0F172A;
-    border: 4px solid #38BDF8;
-    border-radius: 20px;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3), inset 0 0 15px rgba(0, 0, 0, 0.5);
-    position: relative;
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    /* 🔥 السطر المسؤول عن إجبار الصورة على الانحناء مع الإطار وحجب الأركان الحادة 🔥 */
-    overflow: hidden; 
-}
-    
+        #puzzle-grid {
+            width: 100%;
+            max-width: 360px;
+            margin: 0 auto;
+            display: grid;
+            gap: 6px;
+            padding: 6px;
+            background: #0F172A;
+            border: 4px solid #38BDF8;
+            border-radius: 20px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3), inset 0 0 15px rgba(0, 0, 0, 0.5);
+            position: relative;
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+        }
 
         /* 🧩 قطع البزل بحواف 3D انسيابية وحافة زجاجية S7 Edge 🧩 */
         .tile {
@@ -149,14 +146,12 @@
             filter: brightness(1.15);
         }
 
-        /* عند الحل: دمج كامل واختفاء الفواصل مع الانحناء الدائري للاطار */
-#puzzle-grid.solved {
-    gap: 0;
-    padding: 0;
-    border-color: #06D6A0 !important;
-    box-shadow: 0 0 25px rgba(6, 214, 160, 0.6);
-    border-radius: 20px; /* الحفاظ على الانحناء */
-}
+        /* عند الحل: إخفاء الفواصل تماماً لظهور الصورة ناصعة */
+        #puzzle-grid.solved {
+            gap: 0;
+            padding: 0;
+            border-color: #06D6A0 !important;
+            box-shadow: 0 0 25px rgba(6, 214, 160, 0.6);
         }
         #puzzle-grid.solved .tile { 
             border-radius: 0;
