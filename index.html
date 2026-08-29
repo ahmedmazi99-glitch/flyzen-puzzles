@@ -403,7 +403,7 @@
             <div style="background: #FFFBEB; border: 2px dashed #F59E0B; border-radius: 14px; padding: 10px; margin-top: 10px;">
                 <div style="color: #D97706; font-size: 12px; font-weight: bold; margin-bottom: 4px;">🚀 NEXT STEP, FUTURE PILOT:</div>
                 <div style="color: #78350F; font-size: 11px; line-height: 1.4; font-weight: 500;">
-                    Awesome job! Now turn to the next page in your <b>activity book</b>, complete the fun challenges and search puzzles, then scan the <b>QR Code</b> for your next puzzle mission! 📖✨
+                    Awesome job! Now turn to the next page in your <b>activity book</b>, complete the fun challenges, then scan the <b>QR Code</b> for your next puzzle mission! 📖✨
                 </div>
             </div>
         </div>
@@ -419,7 +419,7 @@
             <div style="font-size: 40px; margin-bottom: 8px;">📖🔒</div>
             <h3 style="color: #D97706; margin: 0 0 8px 0; font-size: 16px;">Level Locked!</h3>
             <p style="color: #475569; font-size: 12px; line-height: 1.5; margin-bottom: 16px;">
-                Hey Hero! You need to return to your <b>activity book</b>, complete the fun activities, and scan the <b>QR Code</b> for this specific level to unlock it! ✈️
+                Hey Hero! You need to finish the previous level AND scan the <b>official QR Code</b> printed in the book for this specific level to unlock it! ✈️
             </p>
             <button class="btn" style="background: #F59E0B; width: 100%;" onclick="closeLockModal()">Got it! Back to Book 📚</button>
         </div>
@@ -444,11 +444,11 @@
         const codeParam = urlParams.get('p');
 
         let isValidLink = false;
-        let requestedLevel = null;
+        let scannedQRLevel = null;
 
         if (codeParam && ALLOWED_PASSCODES.hasOwnProperty(codeParam)) {
             isValidLink = true;
-            requestedLevel = ALLOWED_PASSCODES[codeParam];
+            scannedQRLevel = ALLOWED_PASSCODES[codeParam];
         }
 
         document.addEventListener('keydown', (e) => {
@@ -480,7 +480,7 @@
         });
 
         /* ========================================================
-           2. STRICT SEQUENTIAL & HARDWARE QR UNLOCK ENGINE
+           2. STRICT UNLOCK ENGINE & ACTIVE SESSION CONTROL
         ======================================================== */
         function getHighestUnlockedLevel() {
             let unlocked = 1;
@@ -495,13 +495,20 @@
         }
 
         let maxUnlockedLevel = getHighestUnlockedLevel();
-        let currentLevel = requestedLevel || 1;
+        let currentLevel = 1;
+        let activeQRLevel = 1; // الرمز المعتمد للجلسة الحالية
         let shouldShowLockOnStart = false;
 
-        // إذا حاول التجاوز تسلسلياً (مسح QR لمستوى متقدم دون إنهاء ما قبله)
-        if (requestedLevel > maxUnlockedLevel) {
-            currentLevel = maxUnlockedLevel;
-            shouldShowLockOnStart = true;
+        if (isValidLink) {
+            if (scannedQRLevel > maxUnlockedLevel) {
+                // إلغاء كود المستوى المتقدم إذا لم يكمل ما قبله
+                activeQRLevel = maxUnlockedLevel;
+                currentLevel = maxUnlockedLevel;
+                shouldShowLockOnStart = true;
+            } else {
+                activeQRLevel = scannedQRLevel;
+                currentLevel = scannedQRLevel;
+            }
         }
 
         const difficultyTitles = {
@@ -530,9 +537,10 @@
             const modalContent = modal.querySelector('.modal-content');
             modalContent.innerHTML = `
                 <div style="font-size: 50px; margin-bottom: 8px;">⛔🔒</div>
-                <h3 style="color: #EF4444; margin: 0 0 8px 0; font-size: 18px;">Access Denied </h3>
+                <h3 style="color: #EF4444; margin: 0 0 8px 0; font-size: 18px;">Access Denied</h3>
                 <p style="color: #475569; font-size: 12px; line-height: 1.5; margin-bottom: 16px;">
-                Sorry, this link is invalid! Please scan the <b>official QR Code</b> printed in the book to access the game.                </p>
+                    Sorry, this link is invalid! Please scan the <b>official QR Code</b> printed in the book to access the game.
+                </p>
             `;
             modal.style.display = 'flex';
             document.getElementById('mainCard').style.display = 'none';
@@ -600,8 +608,10 @@
                 const node = document.getElementById(`node-${i}`);
                 node.className = 'map-node';
                 
-                // الملاحظة الهامة: القفل يظهر إذا لم يمسح كود QR الخاص بهذه المرحلة تحديداً
-                if (i > maxUnlockedLevel || requestedLevel !== i) {
+                // شرط الوصول: يجب أن يكون المستوى منجزاً سابوقاً وألا يتجاوز كود QR الحالي الممسوح
+                const isAccessible = (i <= activeQRLevel) && (i <= maxUnlockedLevel);
+
+                if (!isAccessible) {
                     node.classList.add('locked');
                     node.innerText = '🔒';
                 } else {
@@ -623,18 +633,13 @@
         }
 
         function switchLevel(lvl) {
-            // الشرط الصارم 1: هل يتطلب إنهاء مرحلة سابقة لم تكتمل؟
-            if (lvl > maxUnlockedLevel) {
+            // التقدم للمراحل القادمة ممنوع بدون مسح كود QR الخاص بها
+            if (lvl > activeQRLevel || lvl > maxUnlockedLevel) {
                 showLockModal();
                 return;
             }
 
-            // الشرط الصارم 2: هل المستخدم يمتلك رمز الـ QR الخاص بهذا المستوى تحديداً؟
-            if (requestedLevel !== lvl) {
-                showLockModal();
-                return;
-            }
-
+            // الرجوع أو الانتقال للمراحل المسموحة فقط
             currentLevel = lvl;
             imageName = `puzzle${currentLevel}.jpg`;
             document.getElementById('levelTitle').innerText = `Level ${currentLevel}: Mission ${currentLevel} 🧩`;
