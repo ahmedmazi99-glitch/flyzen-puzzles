@@ -15,6 +15,7 @@
             font-family: 'Fredoka', cursive, sans-serif;
             user-select: none;
             -webkit-user-select: none;
+            -webkit-touch-callout: none;
             -webkit-tap-highlight-color: transparent;
         }
         
@@ -29,6 +30,13 @@
             min-height: 100dvh;
             text-align: center;
             overflow-y: auto;
+            transition: filter 0.2s ease;
+        }
+
+        /* Security Glass Shield when losing focus */
+        body.security-blur {
+            filter: blur(25px) brightness(0.2);
+            pointer-events: none;
         }
 
         .card {
@@ -293,8 +301,8 @@
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(4px);
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(6px);
             z-index: 999;
             align-items: center;
             justify-content: center;
@@ -382,7 +390,6 @@
             <div class="in-grid-watermark">BY MAZIGHI AHMED</div>
         </div>
 
-        <!-- Win Box with Motivational Incentive to Return to Book -->
         <div id="winBox" class="win-box">
             <h2 id="winBoxHeading" style="color: #0284C7; margin: 0; font-size: 16px;">🎉 MISSION COMPLETED! 🎉</h2>
             <div style="font-size: 24px;" id="starRating">⭐⭐⭐</div>
@@ -394,7 +401,6 @@
                 <div id="pointsEarned" style="color: #0EA5E9; font-size: 11px; font-weight: bold;">+0 XP EARNED!</div>
             </div>
 
-            <!-- English Motivational Message to Prompt Reading the Next Page -->
             <div style="background: #FFFBEB; border: 2px dashed #F59E0B; border-radius: 14px; padding: 10px; margin-top: 10px;">
                 <div style="color: #D97706; font-size: 12px; font-weight: bold; margin-bottom: 4px;">🚀 NEXT STEP, FUTURE PILOT:</div>
                 <div style="color: #78350F; font-size: 11px; line-height: 1.4; font-weight: 500;">
@@ -409,7 +415,6 @@
         </div>
     </div>
 
-    <!-- Modal overlay when tapping a locked level -->
     <div id="lockModal" class="modal-overlay">
         <div class="modal-content">
             <div style="font-size: 40px; margin-bottom: 8px;">📖🔒</div>
@@ -425,9 +430,83 @@
     <img id="secret-source" style="display:none;" />
 
     <script>
+        /* ========================================================
+           1. CYBERSECURITY & ANTI-ESPIONAGE SHIELD
+        ======================================================== */
+        // Block Inspect Element, View Source, and Save Shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (
+                e.key === 'F12' ||
+                (e.ctrlKey && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key)) ||
+                (e.ctrlKey && ['U', 'u', 'S', 's', 'P', 'p'].includes(e.key))
+            ) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            
+            // Clear clipboard on PrintScreen key press
+            if (e.key === 'PrintScreen') {
+                navigator.clipboard.writeText('');
+                alert('Screenshots are disabled on this application for copyright protection.');
+            }
+        });
+
+        // Disable Context Menu & Image Dragging
+        document.addEventListener('contextmenu', (e) => e.preventDefault());
+        document.addEventListener('dragstart', (e) => e.preventDefault());
+
+        // Anti-Screen Capture / Blur UI when switching windows or taking background snapshots
+        window.addEventListener('blur', () => document.body.classList.add('security-blur'));
+        window.addEventListener('focus', () => document.body.classList.remove('security-blur'));
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                document.body.classList.add('security-blur');
+            } else {
+                document.body.classList.remove('security-blur');
+            }
+        });
+
+        /* ========================================================
+           2. GAME LOGIC & STRICT SEQUENTIAL UNLOCK SYSTEM
+        ======================================================== */
+        const LEVEL_PASSCODES = {
+            'a8f3k': 1,
+            'b7x9m': 2,
+            'k4p2w': 3,
+            'q9r1z': 4,
+            'v3t8y': 5
+        };
+
         const urlParams = new URLSearchParams(window.location.search);
-        let maxUnlockedLevel = parseInt(urlParams.get('lvl')) || 1;
-        let currentLevel = maxUnlockedLevel;
+        const codeParam = urlParams.get('p');
+        const directLvlParam = parseInt(urlParams.get('lvl'));
+
+        let requestedLevel = LEVEL_PASSCODES[codeParam] || directLvlParam || 1;
+        if (isNaN(requestedLevel) || requestedLevel < 1 || requestedLevel > 5) {
+            requestedLevel = 1;
+        }
+
+        function getHighestUnlockedLevel() {
+            let unlocked = 1;
+            for (let i = 1; i < 5; i++) {
+                if (localStorage.getItem(`lvl_${i}_completed`) === 'true') {
+                    unlocked = i + 1;
+                } else {
+                    break;
+                }
+            }
+            return unlocked;
+        }
+
+        let maxUnlockedLevel = getHighestUnlockedLevel();
+        let currentLevel = requestedLevel;
+        let shouldShowLockOnStart = false;
+
+        if (requestedLevel > maxUnlockedLevel) {
+            currentLevel = maxUnlockedLevel;
+            shouldShowLockOnStart = true;
+        }
 
         const difficultyTitles = {
             3: { title: "JUNIOR PILOT 🐣", icon: "🐣" },
@@ -507,6 +586,7 @@
         }
 
         function updateFlightMap() {
+            maxUnlockedLevel = getHighestUnlockedLevel();
             for (let i = 1; i <= 5; i++) {
                 const node = document.getElementById(`node-${i}`);
                 node.className = 'map-node';
@@ -515,8 +595,8 @@
                     node.classList.add('locked');
                     node.innerText = '🔒';
                 } else {
-                    let isDoneInCurrentGrid = localStorage.getItem(`lvl_${i}_grid_${gridSize}_done`);
-                    if (isDoneInCurrentGrid) {
+                    let isDone = localStorage.getItem(`lvl_${i}_completed`) === 'true';
+                    if (isDone) {
                         node.classList.add('completed');
                         if (gridSize === 3) node.innerText = '🥉';
                         else if (gridSize === 4) node.innerText = '🥈';
@@ -761,6 +841,7 @@
                 triggerHaptic('win');
                 confetti({ particleCount: 150, spread: 90 });
 
+                localStorage.setItem(`lvl_${currentLevel}_completed`, 'true');
                 localStorage.setItem(`lvl_${currentLevel}_grid_${gridSize}_done`, 'true');
 
                 let currentBest = localStorage.getItem(`best_time_lvl_${currentLevel}_grid_${gridSize}`);
@@ -791,6 +872,10 @@
 
         document.getElementById('levelTitle').innerText = `Level ${currentLevel}: Mission ${currentLevel} 🧩`;
         loadAndSetImage();
+
+        if (shouldShowLockOnStart) {
+            showLockModal();
+        }
     </script>
 </body>
 </html>
