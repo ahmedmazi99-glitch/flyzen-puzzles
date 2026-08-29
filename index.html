@@ -451,7 +451,6 @@
             requestedLevel = ALLOWED_PASSCODES[codeParam];
         }
 
-        /* Prevent inspection / easy bypass */
         document.addEventListener('keydown', (e) => {
             if (
                 e.key === 'F12' ||
@@ -491,9 +490,7 @@
         let shouldShowLockOnStart = false;
 
         if (isValidLink) {
-            // التحقق من شرطين: هل الرابط يخص مستوى متقدم لم يتم حل ما قبله؟
             if (requestedLevel > maxUnlockedLevel) {
-                // منع فتح المستوى وسحب الصلاحية وتوجيه المستخدم لأعلى مستوى متاح له
                 activeAuthorizedLevel = maxUnlockedLevel;
                 currentLevel = maxUnlockedLevel;
                 shouldShowLockOnStart = true;
@@ -594,21 +591,25 @@
             }
         }
 
+        /* ========================================================
+           INDEPENDENT DIFFICULTY MAP ENGINE
+        ======================================================== */
         function updateFlightMap() {
             maxUnlockedLevel = getHighestUnlockedLevel();
             for (let i = 1; i <= 5; i++) {
                 const node = document.getElementById(`node-${i}`);
                 node.className = 'map-node';
                 
-                // التحكم بالوصول: إكمال ما قبله + الدخول عبر رابط/كود معتمد للمستوى
                 const isAccessible = (i <= activeAuthorizedLevel) && (i <= maxUnlockedLevel);
 
                 if (!isAccessible) {
                     node.classList.add('locked');
                     node.innerText = '🔒';
                 } else {
-                    let isDone = localStorage.getItem(`lvl_${i}_completed`) === 'true';
-                    if (isDone) {
+                    // فحص الإنجاز المستقل الخاص بدرجة الصعوبة المحددة حالياً
+                    let isSpecificGridDone = localStorage.getItem(`lvl_${i}_grid_${gridSize}_done`) === 'true';
+
+                    if (isSpecificGridDone) {
                         node.classList.add('completed');
                         if (gridSize === 3) node.innerText = '🥉';
                         else if (gridSize === 4) node.innerText = '🥈';
@@ -625,7 +626,6 @@
         }
 
         function switchLevel(lvl) {
-            // يمنع فتح المستويات التالية من الخريطة إلا بشرط: إكمال السابق + رابط/كود معتمد
             if (lvl > activeAuthorizedLevel || lvl > maxUnlockedLevel) {
                 showLockModal();
                 return;
@@ -854,6 +854,7 @@
                 triggerHaptic('win');
                 confetti({ particleCount: 150, spread: 90 });
 
+                // حفظ الإنجاز العام للمرحلة لإتاحة الانتقال + حفظ الإنجاز الخاص بدرجة الصعوبة الحالية
                 localStorage.setItem(`lvl_${currentLevel}_completed`, 'true');
                 localStorage.setItem(`lvl_${currentLevel}_grid_${gridSize}_done`, 'true');
 
