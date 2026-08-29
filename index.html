@@ -403,7 +403,7 @@
             <div style="background: #FFFBEB; border: 2px dashed #F59E0B; border-radius: 14px; padding: 10px; margin-top: 10px;">
                 <div style="color: #D97706; font-size: 12px; font-weight: bold; margin-bottom: 4px;">🚀 NEXT STEP, FUTURE PILOT:</div>
                 <div style="color: #78350F; font-size: 11px; line-height: 1.4; font-weight: 500;">
-                    Awesome job! Now turn to the next page in your <b>activity book</b>, complete the fun challenges, then scan the <b>QR Code</b> for your next puzzle mission! 📖✨
+                    Awesome job! Open the next page in your <b>book or PDF</b>, complete the challenge, then scan the <b>QR Code</b> or click its <b>link</b> to unlock the next level! 📖✨
                 </div>
             </div>
         </div>
@@ -419,7 +419,7 @@
             <div style="font-size: 40px; margin-bottom: 8px;">📖🔒</div>
             <h3 style="color: #D97706; margin: 0 0 8px 0; font-size: 16px;">Level Locked!</h3>
             <p style="color: #475569; font-size: 12px; line-height: 1.5; margin-bottom: 16px;">
-                Hey Hero! You need to finish the previous level AND scan the <b>official QR Code</b> printed in the book for this specific level to unlock it! ✈️
+                Hey Hero! You must complete the previous level FIRST, then scan the <b>QR Code</b> or click the <b>official link</b> in the book to access this level! ✈️
             </p>
             <button class="btn" style="background: #F59E0B; width: 100%;" onclick="closeLockModal()">Got it! Back to Book 📚</button>
         </div>
@@ -430,7 +430,7 @@
 
     <script>
         /* ========================================================
-           1. CYBERSECURITY & STRICT ACCESS CONTROL
+           1. PASSCODE MAPPING & ACCESS CONTROL
         ======================================================== */
         const ALLOWED_PASSCODES = {
             'a8f3k': 1,
@@ -444,13 +444,14 @@
         const codeParam = urlParams.get('p');
 
         let isValidLink = false;
-        let scannedQRLevel = null;
+        let requestedLevel = null;
 
         if (codeParam && ALLOWED_PASSCODES.hasOwnProperty(codeParam)) {
             isValidLink = true;
-            scannedQRLevel = ALLOWED_PASSCODES[codeParam];
+            requestedLevel = ALLOWED_PASSCODES[codeParam];
         }
 
+        /* Prevent inspection / easy bypass */
         document.addEventListener('keydown', (e) => {
             if (
                 e.key === 'F12' ||
@@ -461,9 +462,6 @@
                 e.stopPropagation();
                 return false;
             }
-            if (e.key === 'PrintScreen') {
-                navigator.clipboard.writeText('');
-            }
         });
 
         document.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -471,16 +469,9 @@
 
         window.addEventListener('blur', () => document.body.classList.add('security-blur'));
         window.addEventListener('focus', () => document.body.classList.remove('security-blur'));
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                document.body.classList.add('security-blur');
-            } else {
-                document.body.classList.remove('security-blur');
-            }
-        });
 
         /* ========================================================
-           2. STRICT UNLOCK ENGINE & ACTIVE SESSION CONTROL
+           2. PREREQUISITE LEVEL VERIFICATION ENGINE
         ======================================================== */
         function getHighestUnlockedLevel() {
             let unlocked = 1;
@@ -496,18 +487,19 @@
 
         let maxUnlockedLevel = getHighestUnlockedLevel();
         let currentLevel = 1;
-        let activeQRLevel = 1; // الرمز المعتمد للجلسة الحالية
+        let activeAuthorizedLevel = 1;
         let shouldShowLockOnStart = false;
 
         if (isValidLink) {
-            if (scannedQRLevel > maxUnlockedLevel) {
-                // إلغاء كود المستوى المتقدم إذا لم يكمل ما قبله
-                activeQRLevel = maxUnlockedLevel;
+            // التحقق من شرطين: هل الرابط يخص مستوى متقدم لم يتم حل ما قبله؟
+            if (requestedLevel > maxUnlockedLevel) {
+                // منع فتح المستوى وسحب الصلاحية وتوجيه المستخدم لأعلى مستوى متاح له
+                activeAuthorizedLevel = maxUnlockedLevel;
                 currentLevel = maxUnlockedLevel;
                 shouldShowLockOnStart = true;
             } else {
-                activeQRLevel = scannedQRLevel;
-                currentLevel = scannedQRLevel;
+                activeAuthorizedLevel = requestedLevel;
+                currentLevel = requestedLevel;
             }
         }
 
@@ -539,7 +531,7 @@
                 <div style="font-size: 50px; margin-bottom: 8px;">⛔🔒</div>
                 <h3 style="color: #EF4444; margin: 0 0 8px 0; font-size: 18px;">Access Denied</h3>
                 <p style="color: #475569; font-size: 12px; line-height: 1.5; margin-bottom: 16px;">
-                    Sorry, this link is invalid! Please scan the <b>official QR Code</b> printed in the book to access the game.
+                    Sorry, this link or QR Code is invalid! Please use the <b>official link or QR Code</b> printed in the book.
                 </p>
             `;
             modal.style.display = 'flex';
@@ -608,8 +600,8 @@
                 const node = document.getElementById(`node-${i}`);
                 node.className = 'map-node';
                 
-                // شرط الوصول: يجب أن يكون المستوى منجزاً سابوقاً وألا يتجاوز كود QR الحالي الممسوح
-                const isAccessible = (i <= activeQRLevel) && (i <= maxUnlockedLevel);
+                // التحكم بالوصول: إكمال ما قبله + الدخول عبر رابط/كود معتمد للمستوى
+                const isAccessible = (i <= activeAuthorizedLevel) && (i <= maxUnlockedLevel);
 
                 if (!isAccessible) {
                     node.classList.add('locked');
@@ -633,13 +625,12 @@
         }
 
         function switchLevel(lvl) {
-            // التقدم للمراحل القادمة ممنوع بدون مسح كود QR الخاص بها
-            if (lvl > activeQRLevel || lvl > maxUnlockedLevel) {
+            // يمنع فتح المستويات التالية من الخريطة إلا بشرط: إكمال السابق + رابط/كود معتمد
+            if (lvl > activeAuthorizedLevel || lvl > maxUnlockedLevel) {
                 showLockModal();
                 return;
             }
 
-            // الرجوع أو الانتقال للمراحل المسموحة فقط
             currentLevel = lvl;
             imageName = `puzzle${currentLevel}.jpg`;
             document.getElementById('levelTitle').innerText = `Level ${currentLevel}: Mission ${currentLevel} 🧩`;
@@ -893,7 +884,7 @@
         }
 
         /* ========================================================
-           3. INITIALIZATION & STRICT ENFORCEMENT
+           3. INITIALIZATION & SECURITY RUNTIME
         ======================================================== */
         if (!isValidLink) {
             triggerAccessDenied();
