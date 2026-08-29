@@ -33,7 +33,6 @@
             transition: filter 0.2s ease;
         }
 
-        /* Security Glass Shield when losing focus */
         body.security-blur {
             filter: blur(25px) brightness(0.2);
             pointer-events: none;
@@ -367,7 +366,7 @@
         </div>
 
         <span class="badge">✈️ FLYZEN OFFICIAL ACTIVITY</span>
-        <h1 id="levelTitle">Level 1: Sky Explorer 🧩</h1>
+        <h1 id="levelTitle">Level 1: Mission 1 🧩</h1>
         <div class="current-rank-badge" id="currentRankBadge">TARGET: JUNIOR PILOT 🐣</div>
         
         <div class="game-info">
@@ -420,7 +419,7 @@
             <div style="font-size: 40px; margin-bottom: 8px;">📖🔒</div>
             <h3 style="color: #D97706; margin: 0 0 8px 0; font-size: 16px;">Level Locked!</h3>
             <p style="color: #475569; font-size: 12px; line-height: 1.5; margin-bottom: 16px;">
-                Hey Hero! You need to return to your <b>activity book</b>, complete the fun activities, and scan the <b>QR Code</b> for this level to unlock it! ✈️
+                Hey Hero! You need to return to your <b>activity book</b>, complete the fun activities, and scan the <b>QR Code</b> for this specific level to unlock it! ✈️
             </p>
             <button class="btn" style="background: #F59E0B; width: 100%;" onclick="closeLockModal()">Got it! Back to Book 📚</button>
         </div>
@@ -431,9 +430,8 @@
 
     <script>
         /* ========================================================
-           1. CYBERSECURITY & STRICT ACCESS CONTROL (PASSCODE ONLY)
+           1. CYBERSECURITY & STRICT ACCESS CONTROL
         ======================================================== */
-        // الرموز العشوائية المعتمدة حصراً (أي رابط آخر سيتم حظره تماماً)
         const ALLOWED_PASSCODES = {
             'a8f3k': 1,
             'b7x9m': 2,
@@ -453,7 +451,6 @@
             requestedLevel = ALLOWED_PASSCODES[codeParam];
         }
 
-        // تعطيل أدوات الفحص، F12، والنسخ
         document.addEventListener('keydown', (e) => {
             if (
                 e.key === 'F12' ||
@@ -472,7 +469,6 @@
         document.addEventListener('contextmenu', (e) => e.preventDefault());
         document.addEventListener('dragstart', (e) => e.preventDefault());
 
-        // التعتيم الأمني عند الانتقال أو تصوير المعاينة
         window.addEventListener('blur', () => document.body.classList.add('security-blur'));
         window.addEventListener('focus', () => document.body.classList.remove('security-blur'));
         document.addEventListener('visibilitychange', () => {
@@ -484,7 +480,7 @@
         });
 
         /* ========================================================
-           2. STRICT SEQUENTIAL UNLOCK & GAME ENGINE
+           2. STRICT SEQUENTIAL & HARDWARE QR UNLOCK ENGINE
         ======================================================== */
         function getHighestUnlockedLevel() {
             let unlocked = 1;
@@ -502,6 +498,7 @@
         let currentLevel = requestedLevel || 1;
         let shouldShowLockOnStart = false;
 
+        // إذا حاول التجاوز تسلسلياً (مسح QR لمستوى متقدم دون إنهاء ما قبله)
         if (requestedLevel > maxUnlockedLevel) {
             currentLevel = maxUnlockedLevel;
             shouldShowLockOnStart = true;
@@ -535,8 +532,7 @@
                 <div style="font-size: 50px; margin-bottom: 8px;">⛔🔒</div>
                 <h3 style="color: #EF4444; margin: 0 0 8px 0; font-size: 18px;">Access Denied / رابط غير صالح</h3>
                 <p style="color: #475569; font-size: 12px; line-height: 1.5; margin-bottom: 16px;">
-                    عذراً، هذا الرابط قديم أو غير مسموح به! يرجى استخدام <b>QR Code المعتمد</b> المطبوع في الكتاب للوصول إلى اللعبة.
-                </p>
+                Sorry, this link is invalid! Please scan the <b>official QR Code</b> printed in the book to access the game.                </p>
             `;
             modal.style.display = 'flex';
             document.getElementById('mainCard').style.display = 'none';
@@ -604,7 +600,8 @@
                 const node = document.getElementById(`node-${i}`);
                 node.className = 'map-node';
                 
-                if (i > maxUnlockedLevel) {
+                // الملاحظة الهامة: القفل يظهر إذا لم يمسح كود QR الخاص بهذه المرحلة تحديداً
+                if (i > maxUnlockedLevel || requestedLevel !== i) {
                     node.classList.add('locked');
                     node.innerText = '🔒';
                 } else {
@@ -626,7 +623,14 @@
         }
 
         function switchLevel(lvl) {
+            // الشرط الصارم 1: هل يتطلب إنهاء مرحلة سابقة لم تكتمل؟
             if (lvl > maxUnlockedLevel) {
+                showLockModal();
+                return;
+            }
+
+            // الشرط الصارم 2: هل المستخدم يمتلك رمز الـ QR الخاص بهذا المستوى تحديداً؟
+            if (requestedLevel !== lvl) {
                 showLockModal();
                 return;
             }
@@ -884,7 +888,7 @@
         }
 
         /* ========================================================
-           3. INITIALIZATION & ACCESS CONTROL VERIFICATION
+           3. INITIALIZATION & STRICT ENFORCEMENT
         ======================================================== */
         if (!isValidLink) {
             triggerAccessDenied();
