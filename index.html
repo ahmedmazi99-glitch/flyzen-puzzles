@@ -16,19 +16,19 @@
             user-select: none;
             -webkit-user-select: none;
             -webkit-tap-highlight-color: transparent;
-            touch-action: none;
         }
         
         body {
             margin: 0;
-            padding: 15px 10px;
+            padding: 20px 10px;
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             min-height: 100dvh;
             text-align: center;
+            overflow-y: auto;
         }
 
         .card {
@@ -187,7 +187,6 @@
             margin: 0 auto;
         }
 
-        /* حماية الأبعاد الأصلية للصورة وتجنب فرض المربع */
         #puzzle-grid {
             width: 100%;
             display: grid;
@@ -199,7 +198,7 @@
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
             position: relative;
             overflow: hidden;
-            /* ستحدد نسبة الأبعاد تلقائياً عبر JavaScript عند تحميل الصورة */
+            touch-action: none;
         }
 
         .tile {
@@ -306,6 +305,7 @@
 
         .page-signature {
             margin-top: 14px;
+            margin-bottom: 20px;
             display: flex; align-items: center; justify-content: center; gap: 8px;
             font-family: 'Montserrat', sans-serif;
             font-size: 9px; font-weight: 600; letter-spacing: 2px;
@@ -395,13 +395,12 @@
         let secondsPassed = 0;
         let selectedIndex = null;
 
-        /* 🔊 محرك الأصوات التفاعلي الداخلي (Web Audio API) 🔊 */
+        /* 🔊 محرك الأصوات التفاعلي 🔊 */
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
         function playSound(type) {
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain);
@@ -420,52 +419,59 @@
                 gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
                 osc.start(); osc.stop(audioCtx.currentTime + 0.08);
             } else if (type === 'win') {
-                [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                // معزوفة انتصار ممتدة
+                const notes = [
+                    { f: 523.25, time: 0.00, dur: 0.12 },
+                    { f: 659.25, time: 0.12, dur: 0.12 },
+                    { f: 783.99, time: 0.24, dur: 0.12 },
+                    { f: 1046.50, time: 0.36, dur: 0.20 },
+                    { f: 880.00, time: 0.58, dur: 0.15 },
+                    { f: 1046.50, time: 0.75, dur: 0.50 }
+                ];
+
+                notes.forEach(note => {
                     const noteOsc = audioCtx.createOscillator();
                     const noteGain = audioCtx.createGain();
                     noteOsc.connect(noteGain);
                     noteGain.connect(audioCtx.destination);
-                    noteOsc.frequency.value = freq;
-                    noteGain.gain.setValueAtTime(0.25, audioCtx.currentTime + idx * 0.09);
-                    noteGain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + idx * 0.09 + 0.22);
-                    noteOsc.start(audioCtx.currentTime + idx * 0.09);
-                    noteOsc.stop(audioCtx.currentTime + idx * 0.09 + 0.22);
+                    noteOsc.frequency.value = note.f;
+                    
+                    noteGain.gain.setValueAtTime(0.3, audioCtx.currentTime + note.time);
+                    noteGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + note.time + note.dur);
+                    
+                    noteOsc.start(audioCtx.currentTime + note.time);
+                    noteOsc.stop(audioCtx.currentTime + note.time + note.dur);
                 });
             }
         }
 
-        /* 📳 مشغل الاهتزاز المباشر الموثوق 📳 */
+        /* 📳 الاهتزاز اللمسي الحماسي والمطول 📳 */
         function triggerHaptic(type = 'tap') {
             playSound(type);
             if ('vibrate' in navigator) {
                 try {
                     if (type === 'tap') navigator.vibrate(20);
                     if (type === 'drop') navigator.vibrate([25, 20, 25]);
-                    if (type === 'win') navigator.vibrate([80, 40, 80, 40, 150]);
+                    if (type === 'win') {
+                        navigator.vibrate([100, 40, 100, 40, 100, 40, 200, 60, 150, 60, 450]);
+                    }
                 } catch(e){}
             }
         }
 
-        /* 🏅 تحديث خريطة المستويات وظهور الميداليات 🏅 */
+        /* 🏅 تحديث خريطة المستويات بفرز الصعوبة الحالية فقط 🏅 */
         function updateFlightMap() {
             for (let i = 1; i <= 5; i++) {
                 const node = document.getElementById(`node-${i}`);
                 node.className = 'map-node';
                 
-                // التأكد من حالة اكتمال المستوى لكل حجم
-                let done3 = localStorage.getItem(`lvl_${i}_grid_3_done`);
-                let done4 = localStorage.getItem(`lvl_${i}_grid_4_done`);
-                let done5 = localStorage.getItem(`lvl_${i}_grid_5_done`);
+                let isDoneInCurrentGrid = localStorage.getItem(`lvl_${i}_grid_${gridSize}_done`);
 
-                if (done5) {
+                if (isDoneInCurrentGrid) {
                     node.classList.add('completed');
-                    node.innerText = '🥇';
-                } else if (done4) {
-                    node.classList.add('completed');
-                    node.innerText = '🥈';
-                } else if (done3) {
-                    node.classList.add('completed');
-                    node.innerText = '🥉';
+                    if (gridSize === 3) node.innerText = '🥉';
+                    else if (gridSize === 4) node.innerText = '🥈';
+                    else if (gridSize === 5) node.innerText = '🥇';
                 } else {
                     node.innerText = i;
                 }
@@ -610,7 +616,6 @@
 
         function loadAndSetImage() {
             hiddenImg.onload = () => {
-                // ضبط أبعاد الشبكة لتطابق نسبة الصورة الأصلية تماماً ودون فرض المربع
                 const aspectRatio = hiddenImg.naturalWidth / hiddenImg.naturalHeight || (8.375 / 11.25);
                 grid.style.aspectRatio = `${aspectRatio}`;
                 initGame();
@@ -662,7 +667,6 @@
             setTimeout(() => { hintOverlay.style.display = 'none'; }, 2500);
         }
 
-        /* 📊 نظام حساب ونشر نقاط ה-XP والريكورد 📊 */
         function updateTotalXPDisplay() {
             let totalXP = parseInt(localStorage.getItem('flyzen_total_xp')) || 0;
             document.getElementById('totalScore').innerText = `⭐ XP: ${totalXP}`;
@@ -686,16 +690,13 @@
                 triggerHaptic('win');
                 confetti({ particleCount: 150, spread: 90 });
 
-                // 1. تسجيل الفوز وحفظ الميدالية
                 localStorage.setItem(`lvl_${currentLevel}_grid_${gridSize}_done`, 'true');
 
-                // 2. حساب وحفظ الريكورد وأفضل وقت
                 let currentBest = localStorage.getItem(`best_time_lvl_${currentLevel}_grid_${gridSize}`);
                 if (!currentBest || secondsPassed < parseInt(currentBest)) {
                     localStorage.setItem(`best_time_lvl_${currentLevel}_grid_${gridSize}`, secondsPassed);
                 }
 
-                // 3. حساب نقاط الـ XP المكتسبة
                 let basePoints = gridSize * 150;
                 let timeBonus = Math.max(10, 300 - secondsPassed * 2);
                 let moveBonus = Math.max(10, 200 - moves * 3);
@@ -704,7 +705,6 @@
                 let currentTotalXP = parseInt(localStorage.getItem('flyzen_total_xp')) || 0;
                 localStorage.setItem('flyzen_total_xp', currentTotalXP + earnedXP);
 
-                // 4. عرض النتيجة والرتبة في واجهة الفوز
                 const rankInfo = rankMatrix[currentLevel][gridSize];
                 document.getElementById('rankBadgeIcon').innerText = rankInfo.icon;
                 document.getElementById('rankTitle').innerText = rankInfo.title.toUpperCase();
@@ -716,7 +716,6 @@
             }
         }
 
-        // إطلاق اللعبة
         loadAndSetImage();
     </script>
 </body>
