@@ -419,7 +419,6 @@
                 gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
                 osc.start(); osc.stop(audioCtx.currentTime + 0.08);
             } else if (type === 'win') {
-                // معزوفة انتصار ممتدة
                 const notes = [
                     { f: 523.25, time: 0.00, dur: 0.12 },
                     { f: 659.25, time: 0.12, dur: 0.12 },
@@ -445,21 +444,40 @@
             }
         }
 
-        /* 📳 الاهتزاز اللمسي الحماسي والمطول 📳 */
+        /* 📳 محرك اهتزاز مطوّر وشامل يشتغل على جميع أجهزة الأندرويد 📳 */
         function triggerHaptic(type = 'tap') {
             playSound(type);
-            if ('vibrate' in navigator) {
+
+            if ('vibrate' in navigator && typeof navigator.vibrate === 'function') {
                 try {
-                    if (type === 'tap') navigator.vibrate(20);
-                    if (type === 'drop') navigator.vibrate([25, 20, 25]);
-                    if (type === 'win') {
-                        navigator.vibrate([100, 40, 100, 40, 100, 40, 200, 60, 150, 60, 450]);
+                    if (type === 'tap') {
+                        navigator.vibrate(30);
+                    } else if (type === 'drop') {
+                        navigator.vibrate(50);
+                    } else if (type === 'win') {
+                        // 1. محاولة استخدام النمط المتسلسل للأجهزة المتقدمة
+                        let worked = false;
+                        try {
+                            worked = navigator.vibrate([100, 40, 100, 40, 150, 40, 500]);
+                        } catch(err) {
+                            worked = false;
+                        }
+
+                        // 2. خطة بديلة للأجهزة التي تقبل الاهتزاز الثابت فقط
+                        if (!worked) {
+                            navigator.vibrate(800);
+                        }
+
+                        // 3. دعم إضافي عبر مؤقتات زمنيّة لضمان اهتزاز قوي ومطوّل في جميع المتصفحات
+                        setTimeout(() => { navigator.vibrate(200); }, 200);
+                        setTimeout(() => { navigator.vibrate(400); }, 500);
                     }
-                } catch(e){}
+                } catch(e) {
+                    console.log("Vibration unsupported", e);
+                }
             }
         }
 
-        /* 🏅 تحديث خريطة المستويات بفرز الصعوبة الحالية فقط 🏅 */
         function updateFlightMap() {
             for (let i = 1; i <= 5; i++) {
                 const node = document.getElementById(`node-${i}`);
