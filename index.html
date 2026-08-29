@@ -109,6 +109,13 @@
             border-color: #A7F3D0;
         }
 
+        .map-node.locked {
+            background: #94A3B8;
+            color: #FFFFFF;
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
         .map-node.active {
             transform: scale(1.2);
             border-color: #0284C7 !important;
@@ -282,6 +289,30 @@
             animation: popIn 0.3s ease;
         }
 
+        /* نافذة القفل عند محاولة قفز المستوى */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: #FFFFFF;
+            border-radius: 24px;
+            padding: 20px;
+            max-width: 320px;
+            width: 100%;
+            border: 4px solid #F59E0B;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            animation: popIn 0.3s ease;
+        }
+
         @keyframes popIn {
             from { transform: scale(0.85); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
@@ -343,7 +374,7 @@
         <div class="diff-selector">
             <button class="diff-btn active" onclick="changeDifficulty(3, this)">Easy (3x3)</button>
             <button class="diff-btn" onclick="changeDifficulty(4, this)">Medium (4x4)</button>
-            <button class="diff-btn" onclick="changeDifficulty(5, 5)">Hard (5x5)</button>
+            <button class="diff-btn" onclick="changeDifficulty(5, this)">Hard (5x5)</button>
         </div>
         
         <div id="puzzle-container">
@@ -370,18 +401,33 @@
         </div>
     </div>
 
+    <!-- نافذة تنبيهية لتوجيه الطفل إلى الكتاب -->
+    <div id="lockModal" class="modal-overlay">
+        <div class="modal-content">
+            <div style="font-size: 40px; margin-bottom: 8px;">📖🔒</div>
+            <h3 style="color: #D97706; margin: 0 0 8px 0; font-size: 16px;">المستوى مغلق!</h3>
+            <p style="color: #475569; font-size: 12px; line-height: 1.5; margin-bottom: 16px;">
+                يا بطل! عليك العودة إلى <b>الكتاب الورقي</b> وإكمال الأنشطة الممتعة، ثم قم بمسح <b>رمز QR</b> الخاص بهذا المستوى لفتحه! ✈️
+            </p>
+            <button class="btn" style="background: #F59E0B; width: 100%;" onclick="closeLockModal()">فهمت! سأعود للكتاب 📚</button>
+        </div>
+    </div>
+
     <div class="page-signature">BY MAZIGHI AHMED</div>
     <img id="secret-source" style="display:none;" />
 
     <script>
-        // تعريف الشارات بناءً على الصعوبة
+        // تحديد المستوى المفتوح عبر QR Code برابط الصفحة (مثال: puzzle.html?lvl=2)
+        const urlParams = new URLSearchParams(window.location.search);
+        let maxUnlockedLevel = parseInt(urlParams.get('lvl')) || 1;
+        let currentLevel = maxUnlockedLevel;
+
         const difficultyTitles = {
             3: { title: "JUNIOR PILOT 🐣 (طيار صغير)", icon: "🐣" },
             4: { title: "MID PILOT ✈️ (طيار متوسط)", icon: "✈️" },
             5: { title: "PRO PILOT 🚀 (طيار محترف)", icon: "🚀" }
         };
 
-        let currentLevel = 1;
         let imageName = `puzzle${currentLevel}.jpg`;
         const grid = document.getElementById('puzzle-grid');
         const hiddenImg = document.getElementById('secret-source');
@@ -395,7 +441,6 @@
         let secondsPassed = 0;
         let selectedIndex = null;
 
-        /* 🔊 محرك الأصوات التفاعلي 🔊 */
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
         function playSound(type) {
@@ -435,45 +480,43 @@
                     noteOsc.connect(noteGain);
                     noteGain.connect(audioCtx.destination);
                     noteOsc.frequency.value = note.f;
-                    
                     noteGain.gain.setValueAtTime(0.3, audioCtx.currentTime + note.time);
                     noteGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + note.time + note.dur);
-                    
                     noteOsc.start(audioCtx.currentTime + note.time);
                     noteOsc.stop(audioCtx.currentTime + note.time + note.dur);
                 });
             }
         }
 
-        /* 📳 الاهتزاز اللمسي الحماسي والمطول 📳 */
         function triggerHaptic(type = 'tap') {
             playSound(type);
             if ('vibrate' in navigator) {
                 try {
                     if (type === 'tap') navigator.vibrate(20);
                     if (type === 'drop') navigator.vibrate([25, 20, 25]);
-                    if (type === 'win') {
-                        navigator.vibrate([100, 40, 100, 40, 100, 40, 200, 60, 150, 60, 450]);
-                    }
+                    if (type === 'win') navigator.vibrate([100, 40, 100, 40, 100, 40, 200, 60, 150, 60, 450]);
                 } catch(e){}
             }
         }
 
-        /* 🏅 تحديث خريطة المستويات والنقاط 🏅 */
         function updateFlightMap() {
             for (let i = 1; i <= 5; i++) {
                 const node = document.getElementById(`node-${i}`);
                 node.className = 'map-node';
                 
-                let isDoneInCurrentGrid = localStorage.getItem(`lvl_${i}_grid_${gridSize}_done`);
-
-                if (isDoneInCurrentGrid) {
-                    node.classList.add('completed');
-                    if (gridSize === 3) node.innerText = '🥉';
-                    else if (gridSize === 4) node.innerText = '🥈';
-                    else if (gridSize === 5) node.innerText = '🥇';
+                if (i > maxUnlockedLevel) {
+                    node.classList.add('locked');
+                    node.innerText = '🔒';
                 } else {
-                    node.innerText = i;
+                    let isDoneInCurrentGrid = localStorage.getItem(`lvl_${i}_grid_${gridSize}_done`);
+                    if (isDoneInCurrentGrid) {
+                        node.classList.add('completed');
+                        if (gridSize === 3) node.innerText = '🥉';
+                        else if (gridSize === 4) node.innerText = '🥈';
+                        else if (gridSize === 5) node.innerText = '🥇';
+                    } else {
+                        node.innerText = i;
+                    }
                 }
 
                 if (i === currentLevel) node.classList.add('active');
@@ -483,12 +526,26 @@
         }
 
         function switchLevel(lvl) {
+            // منع الطفل من التقدم لمستوى أعلى لم يقُم بمسحه من الكتاب
+            if (lvl > maxUnlockedLevel) {
+                showLockModal();
+                return;
+            }
+
             currentLevel = lvl;
             imageName = `puzzle${currentLevel}.jpg`;
             document.getElementById('levelTitle').innerText = `Level ${currentLevel}: Mission ${currentLevel} 🧩`;
             updateRankTargetUI();
             updateFlightMap();
             loadAndSetImage();
+        }
+
+        function showLockModal() {
+            document.getElementById('lockModal').style.display = 'flex';
+        }
+
+        function closeLockModal() {
+            document.getElementById('lockModal').style.display = 'none';
         }
 
         function updateRankTargetUI() {
@@ -501,12 +558,6 @@
             document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
             if (btnElement && btnElement.classList) {
                 btnElement.classList.add('active');
-            } else {
-                // للتعامل مع الزر عند الاستدعاء برقم مباشر
-                const btns = document.querySelectorAll('.diff-btn');
-                if (size === 3) btns[0].classList.add('active');
-                if (size === 4) btns[1].classList.add('active');
-                if (size === 5) btns[2].classList.add('active');
             }
             updateRankTargetUI();
             updateFlightMap();
@@ -525,7 +576,6 @@
                 tile.style.backgroundSize = `${gridSize * 100}% ${gridSize * 100}%`;
                 
                 setupHybridTouch(tile, i);
-
                 grid.appendChild(tile);
                 tileElements.push(tile);
             }
@@ -675,18 +725,14 @@
             setTimeout(() => { hintOverlay.style.display = 'none'; }, 2500);
         }
 
-        /* 📊 احتساب وعرض النقاط المسجلة لكل مستوى وللكل 📊 */
         function updateXPDisplays() {
             let totalXP = 0;
-            // حساب إجمالي نقاط كل المستويات
             for (let l = 1; l <= 5; l++) {
                 for (let g of [3, 4, 5]) {
                     totalXP += parseInt(localStorage.getItem(`xp_lvl_${l}_grid_${g}`)) || 0;
                 }
             }
-            // نقاط المستوى والصعوبة الحالية
             let currentLvlXP = parseInt(localStorage.getItem(`xp_lvl_${currentLevel}_grid_${gridSize}`)) || 0;
-            
             document.getElementById('levelScore').innerText = `🎯 Lvl XP: ${currentLvlXP}`;
             document.getElementById('totalScore').innerText = `⭐ Total: ${totalXP}`;
         }
@@ -716,19 +762,16 @@
                     localStorage.setItem(`best_time_lvl_${currentLevel}_grid_${gridSize}`, secondsPassed);
                 }
 
-                // حساب النقاط الخاصة بالدور الحالي
                 let basePoints = gridSize * 150;
                 let timeBonus = Math.max(10, 300 - secondsPassed * 2);
                 let moveBonus = Math.max(10, 200 - moves * 3);
                 let earnedXP = basePoints + timeBonus + moveBonus;
 
-                // حفظ النقاط للمستوى والصعوبة المحددة (إذا كانت أعلى من النقاط السابقة)
                 let prevXP = parseInt(localStorage.getItem(`xp_lvl_${currentLevel}_grid_${gridSize}`)) || 0;
                 if (earnedXP > prevXP) {
                     localStorage.setItem(`xp_lvl_${currentLevel}_grid_${gridSize}`, earnedXP);
                 }
 
-                // عرض الشارات والنقاط المكتسبة
                 const rankInfo = difficultyTitles[gridSize];
                 document.getElementById('rankBadgeIcon').innerText = rankInfo.icon;
                 document.getElementById('rankTitle').innerText = rankInfo.title;
@@ -740,6 +783,7 @@
             }
         }
 
+        document.getElementById('levelTitle').innerText = `Level ${currentLevel}: Mission ${currentLevel} 🧩`;
         loadAndSetImage();
     </script>
 </body>
