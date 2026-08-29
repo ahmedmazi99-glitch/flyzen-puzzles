@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en" translate="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="google" content="notranslate">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flyzen Official Pro Puzzle ✈️</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Fredoka', cursive, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            margin: 0;
+            padding: 20px 10px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100dvh;
+            text-align: center;
+            overflow-y: auto;
+            transition: filter 0.2s ease;
+        }
+
+        body.security-blur {
+            filter: blur(25px) brightness(0.2);
+            pointer-events: none;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 28px;
+            padding: 18px 14px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            max-width: 440px;
+            width: 100%;
+            border: 4px solid #38BDF8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .flight-map-container {
+            width: 100%;
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 18px;
+            padding: 8px 12px;
+            margin-bottom: 10px;
+        }
+
+        .map-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            color: #64748B;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .flight-path {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .flight-path::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            right: 15px;
+            height: 3px;
+            background: #CBD5E1;
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+
+        .map-node {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #E2E8F0;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            position: relative;
+            z-index: 2;
+            border: 2px solid #FFFFFF;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .map-node.completed {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+            color: white;
+            border-color: #A7F3D0;
+        }
+
+        .map-node.locked {
+            background: #94A3B8;
+            color: #FFFFFF;
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .map-node.active {
+            transform: scale(1.2);
+            border-color: #0284C7 !important;
+            box-shadow: 0 0 12px rgba(2, 132, 199, 0.6);
+        }
+
+        .badge {
+            background: #0EA5E9;
+            color: white;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        h1 { color: #0F172A; font-size: 16px; margin: 0 0 4px 0; }
+        
+        .current-rank-badge {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            color: #D97706;
+            background: #FFFBEB;
+            border: 1px dashed #F59E0B;
+            padding: 4px 10px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+        }
+
+        .game-info {
+            display: flex;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #0284C7;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .info-pill {
+            background: #F0F9FF;
+            padding: 3px 8px;
+            border-radius: 12px;
+            border: 1px solid #BAE6FD;
+        }
+
+        .diff-selector {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .diff-btn {
+            background: #F1F5F9;
+            border: 2px solid #CBD5E1;
+            color: #475569;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .diff-btn.active {
+            background: #38BDF8;
+            border-color: #0284C7;
+            color: #FFFFFF;
+        }
+
+        #puzzle-container {
+            position: relative;
+            width: 100%;
+            max-width: 360px;
+            margin: 0 auto;
+        }
+
+        #puzzle-grid {
+            width: 100%;
+            display: grid;
+            gap: 4px;
+            padding: 5px;
+            background: #0F172A;
+            border: 4px solid #0284C7;
+            border-radius: 20px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        .tile {
+            cursor: grab;
+            border-radius: 8px;
+            background-repeat: no-repeat;
+            touch-action: none;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            box-shadow: inset 2px 2px 4px rgba(255, 255, 255, 0.6), inset -2px -2px 4px rgba(0, 0, 0, 0.4), 0 3px 5px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            z-index: 2;
+        }
+
+        .tile.correct {
+            border: 1.5px solid #10B981 !important;
+            box-shadow: inset 0 0 8px rgba(16, 185, 129, 0.6) !important;
+        }
+
+        .tile.dragging {
+            opacity: 0.9;
+            transform: scale(1.1) rotate(2deg);
+            z-index: 100 !important;
+            cursor: grabbing;
+            box-shadow: 0 15px 30px rgba(14, 165, 233, 0.6);
+            outline: 3px solid #38BDF8;
+        }
+
+        .tile.selected {
+            transform: scale(1.05);
+            z-index: 10;
+            outline: 3px solid #0EA5E9;
+            box-shadow: 0 8px 18px rgba(14, 165, 233, 0.5);
+        }
+
+        #puzzle-grid.solved {
+            gap: 0; padding: 0;
+            border-color: #10B981 !important;
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.6);
+        }
+
+        #puzzle-grid.solved .tile { 
+            border-radius: 0; box-shadow: none !important; border: none !important; cursor: default; 
+        }
+
+        #hint-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: 100% 100%;
+            border-radius: 20px;
+            z-index: 10;
+            pointer-events: none;
+            display: none;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            border: 4px solid #38BDF8;
+        }
+
+        .in-grid-watermark {
+            position: absolute;
+            bottom: 8px; right: 10px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 8px; font-weight: 600;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, 0.85);
+            text-transform: uppercase;
+            pointer-events: none;
+            z-index: 6;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(4px);
+            padding: 2px 6px;
+            border-radius: 6px;
+        }
+
+        .win-box {
+            display: none;
+            width: 100%;
+            background: #ECFDF5;
+            border: 3px solid #10B981;
+            border-radius: 20px;
+            padding: 12px;
+            margin-top: 10px;
+            animation: popIn 0.3s ease;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(6px);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: #FFFFFF;
+            border-radius: 24px;
+            padding: 20px;
+            max-width: 320px;
+            width: 100%;
+            border: 4px solid #F59E0B;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            animation: popIn 0.3s ease;
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.85); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .btn-group { display: flex; gap: 8px; margin-top: 12px; width: 100%; justify-content: center; }
+
+        .btn {
+            background: #0284C7;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 15px rgba(2, 132, 199, 0.3);
+        }
+
+        .btn-secondary { background: #64748B; }
+
+        .page-signature {
+            margin-top: 14px;
+            margin-bottom: 20px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 9px; font-weight: 600; letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.6); text-transform: uppercase;
+        }
+        .page-signature::before, .page-signature::after { content: ''; width: 20px; height: 1px; background: rgba(255, 255, 255, 0.25); }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div class="card" id="mainCard">
+        <div class="flight-map-container">
+            <div class="map-title" id="mapTitle">FLYZEN MISSION PATH</div>
+            <div class="flight-path" id="flightPath">
+                <div class="map-node" onclick="switchLevel(1)" id="node-1">1</div>
+                <div class="map-node" onclick="switchLevel(2)" id="node-2">2</div>
+                <div class="map-node" onclick="switchLevel(3)" id="node-3">3</div>
+                <div class="map-node" onclick="switchLevel(4)" id="node-4">4</div>
+                <div class="map-node" onclick="switchLevel(5)" id="node-5">5</div>
+            </div>
+        </div>
+
+        <span class="badge">✈️ FLYZEN OFFICIAL ACTIVITY</span>
+        <h1 id="levelTitle">Level 1: Mission 1 🧩</h1>
+        <div class="current-rank-badge" id="currentRankBadge">TARGET: JUNIOR PILOT 🐣</div>
+        
+        <div class="game-info">
+            <span class="info-pill" id="timer">⏱️ 00:00</span>
+            <span class="info-pill" id="bestTime">🏆 Best: --:--</span>
+            <span class="info-pill" id="movesCount">👆 Moves: 0</span>
+            <span class="info-pill" id="levelScore">🎯 Lvl XP: 0</span>
+            <span class="info-pill" id="totalScore">⭐ Total XP: 0</span>
+        </div>
+
+        <div class="diff-selector">
+            <button class="diff-btn active" onclick="changeDifficulty(3, this)">Easy (3x3)</button>
+            <button class="diff-btn" onclick="changeDifficulty(4, this)">Medium (4x4)</button>
+            <button class="diff-btn" onclick="changeDifficulty(5, this)">Hard (5x5)</button>
+        </div>
+        
+        <div id="puzzle-container">
+            <div id="puzzle-grid"></div>
+            <div id="hint-overlay"></div>
+            <div class="in-grid-watermark">BY MAZIGHI AHMED</div>
+        </div>
+
+        <div id="winBox" class="win-box">
+            <h2 id="winBoxHeading" style="color: #0284C7; margin: 0; font-size: 16px;">🎉 MISSION COMPLETED! 🎉</h2>
+            <div style="font-size: 24px;" id="starRating">⭐⭐⭐</div>
+            <div id="winStats" style="color: #0F766E; margin: 4px 0; font-size: 11px; font-weight: bold;"></div>
+            
+            <div style="background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%); border: 2px dashed #0284C7; border-radius: 14px; padding: 8px; margin-top: 6px;">
+                <div id="rankBadgeIcon" style="font-size: 28px;">🐣</div>
+                <div id="rankTitle" style="color: #0284C7; font-size: 13px; font-weight: bold;">JUNIOR PILOT</div>
+                <div id="pointsEarned" style="color: #0EA5E9; font-size: 11px; font-weight: bold;">+0 XP EARNED!</div>
+            </div>
+
+            <div style="background: #FFFBEB; border: 2px dashed #F59E0B; border-radius: 14px; padding: 10px; margin-top: 10px;">
+                <div style="color: #D97706; font-size: 12px; font-weight: bold; margin-bottom: 4px;">🚀 NEXT STEP, FUTURE PILOT:</div>
+                <div style="color: #78350F; font-size: 11px; line-height: 1.4; font-weight: 500;">
+                    Awesome job! Open the next page in your <b>book or PDF</b>, complete the challenge, then scan the <b>QR Code</b> or click its <b>link</b> to unlock the next level! 📖✨
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn btn-secondary" onclick="triggerHint()">💡 Hint</button>
+            <button class="btn" id="actionBtn" onclick="shuffleTiles()">🔄 Shuffle</button>
+        </div>
+    </div>
+
+    <div id="lockModal" class="modal-overlay">
+        <div class="modal-content">
+            <div style="font-size: 40px; margin-bottom: 8px;">📖🔒</div>
+            <h3 style="color: #D97706; margin: 0 0 8px 0; font-size: 16px;">Level Locked!</h3>
+            <p style="color: #475569; font-size: 12px; line-height: 1.5; margin-bottom: 16px;">
+                Hey Hero! You must complete the previous level FIRST, then scan the <b>QR Code</b> or click the <b>official link</b> in the book to access this level! ✈️
+            </p>
+            <button class="btn" style="background: #F59E0B; width: 100%;" onclick="closeLockModal()">Got it! Back to Book 📚</button>
+        </div>
+    </div>
+
+    <div class="page-signature">BY MAZIGHI AHMED</div>
+    <img id="secret-source" style="display:none;" />
+
+    <script>
+        /* ========================================================
+           1. PASSCODE MAPPING & ACCESS CONTROL
+        ======================================================== */
+        const ALLOWED_PASSCODES = {
+            'a8f3k': 1,
+            'b7x9m': 2,
+            'k4p2w': 3,
+            'q9r1z': 4,
+            'v3t8y': 5
+        };
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const codeParam = urlParams.get('p');
+
+        let isValidLink = false;
+        let requestedLevel = null;
+
+        if (codeParam && ALLOWED_PASSCODES.hasOwnProperty(codeParam)) {
+            isValidLink = true;
+            requestedLevel = ALLOWED_PASSCODES[codeParam];
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (
+                e.key === 'F12' ||
+                (e.ctrlKey && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key)) ||
+                (e.ctrlKey && ['U', 'u', 'S', 's', 'P', 'p'].includes(e.key))
+            ) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        });
+
+        document.addEventListener('contextmenu', (e) => e.preventDefault());
+        document.addEventListener('dragstart', (e) => e.preventDefault());
+
+        window.addEventListener('blur', () => document.body.classList.add('security-blur'));
+        window.addEventListener('focus', () => document.body.classList.remove('security-blur'));
+
+        /* ========================================================
+           2. PREREQUISITE LEVEL VERIFICATION ENGINE
+        ======================================================== */
+        function getHighestUnlockedLevel() {
+            let unlocked = 1;
+            for (let i = 1; i < 5; i++) {
+                if (localStorage.getItem(`lvl_${i}_completed`) === 'true') {
+                    unlocked = i + 1;
+                } else {
+                    break;
+                }
+            }
+            return unlocked;
+        }
+
+        let maxUnlockedLevel = getHighestUnlockedLevel();
+        let currentLevel = 1;
+        let activeAuthorizedLevel = 1;
+        let shouldShowLockOnStart = false;
+
+        if (isValidLink) {
+            if (requestedLevel > maxUnlockedLevel) {
+                activeAuthorizedLevel = maxUnlockedLevel;
+                currentLevel = maxUnlockedLevel;
+                shouldShowLockOnStart = true;
+            } else {
+                activeAuthorizedLevel = requestedLevel;
+                currentLevel = requestedLevel;
+            }
+        }
+
+        const difficultyTitles = {
+            3: { title: "JUNIOR PILOT 🐣", icon: "🐣" },
+            4: { title: "MID PILOT ✈️", icon: "✈️" },
+            5: { title: "PRO PILOT 🚀", icon: "🚀" }
+        };
+
+        let imageName = `puzzle${currentLevel}.jpg`;
+        const grid = document.getElementById('puzzle-grid');
+        const hiddenImg = document.getElementById('secret-source');
+        const winBox = document.getElementById('winBox');
+
+        let gridSize = 3;
+        let currentOrder = [];
+        let tileElements = [];
+        let moves = 0;
+        let timerInterval = null;
+        let secondsPassed = 0;
+        let selectedIndex = null;
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function triggerAccessDenied() {
+            const modal = document.getElementById('lockModal');
+            const modalContent = modal.querySelector('.modal-content');
+            modalContent.innerHTML = `
+                <div style="font-size: 50px; margin-bottom: 8px;">⛔🔒</div>
+                <h3 style="color: #EF4444; margin: 0 0 8px 0; font-size: 18px;">Access Denied</h3>
+                <p style="color: #475569; font-size: 12px; line-height: 1.5; margin-bottom: 16px;">
+                    Sorry, this link or QR Code is invalid! Please use the <b>official link or QR Code</b> printed in the book.
+                </p>
+            `;
+            modal.style.display = 'flex';
+            document.getElementById('mainCard').style.display = 'none';
+        }
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            if (type === 'tap') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.frequency.setValueAtTime(450, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(750, audioCtx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+            } else if (type === 'drop') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.frequency.setValueAtTime(320, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(160, audioCtx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.08);
+            } else if (type === 'win') {
+                const notes = [
+                    { f: 523.25, time: 0.00, dur: 0.12 },
+                    { f: 659.25, time: 0.12, dur: 0.12 },
+                    { f: 783.99, time: 0.24, dur: 0.12 },
+                    { f: 1046.50, time: 0.36, dur: 0.20 },
+                    { f: 880.00, time: 0.58, dur: 0.15 },
+                    { f: 1046.50, time: 0.75, dur: 0.50 }
+                ];
+
+                notes.forEach(note => {
+                    const noteOsc = audioCtx.createOscillator();
+                    const noteGain = audioCtx.createGain();
+                    noteOsc.connect(noteGain);
+                    noteGain.connect(audioCtx.destination);
+                    noteOsc.frequency.value = note.f;
+                    noteGain.gain.setValueAtTime(0.3, audioCtx.currentTime + note.time);
+                    noteGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + note.time + note.dur);
+                    noteOsc.start(audioCtx.currentTime + note.time);
+                    noteOsc.stop(audioCtx.currentTime + note.time + note.dur);
+                });
+            }
+        }
+
+        function triggerHaptic(type = 'tap') {
+            playSound(type);
+            if ('vibrate' in navigator) {
+                try {
+                    if (type === 'tap') navigator.vibrate(20);
+                    if (type === 'drop') navigator.vibrate([25, 20, 25]);
+                    if (type === 'win') navigator.vibrate([100, 40, 100, 40, 100, 40, 200, 60, 150, 60, 450]);
+                } catch(e){}
+            }
+        }
+
+        /* ========================================================
+           INDEPENDENT DIFFICULTY MAP ENGINE
+        ======================================================== */
+        function updateFlightMap() {
+            maxUnlockedLevel = getHighestUnlockedLevel();
+            for (let i = 1; i <= 5; i++) {
+                const node = document.getElementById(`node-${i}`);
+                node.className = 'map-node';
+                
+                const isAccessible = (i <= activeAuthorizedLevel) && (i <= maxUnlockedLevel);
+
+                if (!isAccessible) {
+                    node.classList.add('locked');
+                    node.innerText = '🔒';
+                } else {
+                    // فحص الإنجاز المستقل الخاص بدرجة الصعوبة المحددة حالياً
+                    let isSpecificGridDone = localStorage.getItem(`lvl_${i}_grid_${gridSize}_done`) === 'true';
+
+                    if (isSpecificGridDone) {
+                        node.classList.add('completed');
+                        if (gridSize === 3) node.innerText = '🥉';
+                        else if (gridSize === 4) node.innerText = '🥈';
+                        else if (gridSize === 5) node.innerText = '🥇';
+                    } else {
+                        node.innerText = i;
+                    }
+                }
+
+                if (i === currentLevel) node.classList.add('active');
+            }
+            updateXPDisplays();
+            updateBestTimeDisplay();
+        }
+
+        function switchLevel(lvl) {
+            if (lvl > activeAuthorizedLevel || lvl > maxUnlockedLevel) {
+                showLockModal();
+                return;
+            }
+
+            currentLevel = lvl;
+            imageName = `puzzle${currentLevel}.jpg`;
+            document.getElementById('levelTitle').innerText = `Level ${currentLevel}: Mission ${currentLevel} 🧩`;
+            updateRankTargetUI();
+            updateFlightMap();
+            loadAndSetImage();
+        }
+
+        function showLockModal() {
+            document.getElementById('lockModal').style.display = 'flex';
+        }
+
+        function closeLockModal() {
+            document.getElementById('lockModal').style.display = 'none';
+        }
+
+        function updateRankTargetUI() {
+            const currentRank = difficultyTitles[gridSize];
+            document.getElementById('currentRankBadge').innerText = `TARGET: ${currentRank.title}`;
+        }
+
+        function changeDifficulty(size, btnElement) {
+            gridSize = size;
+            document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+            if (btnElement && btnElement.classList) {
+                btnElement.classList.add('active');
+            }
+            updateRankTargetUI();
+            updateFlightMap();
+            initGame();
+        }
+
+        function createDOMGrid() {
+            grid.innerHTML = '';
+            tileElements = [];
+            const total = gridSize * gridSize;
+
+            for (let i = 0; i < total; i++) {
+                const tile = document.createElement('div');
+                tile.className = 'tile';
+                tile.style.backgroundImage = `url('${imageName}')`;
+                tile.style.backgroundSize = `${gridSize * 100}% ${gridSize * 100}%`;
+                
+                setupHybridTouch(tile, i);
+                grid.appendChild(tile);
+                tileElements.push(tile);
+            }
+        }
+
+        let draggedIndex = null;
+        let startX = 0, startY = 0;
+        let isDragging = false;
+
+        function setupHybridTouch(tile, index) {
+            tile.addEventListener('pointerdown', (e) => {
+                if (grid.classList.contains('solved')) return;
+                draggedIndex = index;
+                startX = e.clientX;
+                startY = e.clientY;
+                isDragging = false;
+                tile.setPointerCapture(e.pointerId);
+                triggerHaptic('tap');
+            });
+
+            tile.addEventListener('pointermove', (e) => {
+                if (draggedIndex === null || grid.classList.contains('solved')) return;
+                let dist = Math.hypot(e.clientX - startX, e.clientY - startY);
+                if (dist > 8) {
+                    isDragging = true;
+                    tile.classList.add('dragging');
+                }
+            });
+
+            tile.addEventListener('pointerup', (e) => {
+                if (draggedIndex === null) return;
+                tile.releasePointerCapture(e.pointerId);
+                tile.classList.remove('dragging');
+
+                if (isDragging) {
+                    let dropTarget = document.elementFromPoint(e.clientX, e.clientY);
+                    let targetTile = dropTarget ? dropTarget.closest('.tile') : null;
+                    if (targetTile) {
+                        let targetIndex = tileElements.indexOf(targetTile);
+                        if (targetIndex !== -1 && targetIndex !== draggedIndex) {
+                            swapPieces(draggedIndex, targetIndex);
+                            triggerHaptic('drop');
+                        }
+                    }
+                } else {
+                    handleTap(draggedIndex);
+                }
+                draggedIndex = null;
+            });
+        }
+
+        function handleTap(index) {
+            if (selectedIndex === null) {
+                selectedIndex = index;
+            } else if (selectedIndex === index) {
+                selectedIndex = null;
+            } else {
+                swapPieces(selectedIndex, index);
+                selectedIndex = null;
+                triggerHaptic('drop');
+            }
+            updateGridUI();
+        }
+
+        function swapPieces(idx1, idx2) {
+            let temp = currentOrder[idx1];
+            currentOrder[idx1] = currentOrder[idx2];
+            currentOrder[idx2] = temp;
+            moves++;
+            document.getElementById('movesCount').innerText = `👆 Moves: ${moves}`;
+            updateGridUI();
+            checkWin();
+        }
+
+        function updateGridUI() {
+            tileElements.forEach((tile, index) => {
+                const pieceId = currentOrder[index];
+                const origCol = pieceId % gridSize;
+                const origRow = Math.floor(pieceId / gridSize);
+                const posX = (origCol / (gridSize - 1)) * 100;
+                const posY = (origRow / (gridSize - 1)) * 100;
+                
+                tile.style.backgroundPosition = `${posX}% ${posY}%`;
+                if (pieceId === index && !grid.classList.contains('solved')) {
+                    tile.classList.add('correct');
+                } else {
+                    tile.classList.remove('correct');
+                }
+                if (selectedIndex === index) {
+                    tile.classList.add('selected');
+                } else {
+                    tile.classList.remove('selected');
+                }
+            });
+        }
+
+        function loadAndSetImage() {
+            hiddenImg.onload = () => {
+                const aspectRatio = hiddenImg.naturalWidth / hiddenImg.naturalHeight || (8.375 / 11.25);
+                grid.style.aspectRatio = `${aspectRatio}`;
+                initGame();
+            };
+            hiddenImg.onerror = () => {
+                grid.style.aspectRatio = `8.375 / 11.25`;
+                initGame();
+            };
+            hiddenImg.src = imageName;
+        }
+
+        function initGame() {
+            grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+            grid.style.gridTemplateRows = `repeat(${gridSize}, 1fr)`;
+            createDOMGrid();
+            currentOrder = Array.from({length: gridSize * gridSize}, (_, i) => i);
+            shuffleTiles();
+        }
+
+        function shuffleTiles() {
+            grid.classList.remove('solved');
+            winBox.style.display = 'none';
+            moves = 0;
+            document.getElementById('movesCount').innerText = `👆 Moves: 0`;
+            do {
+                currentOrder.sort(() => Math.random() - 0.5);
+            } while (currentOrder.every((val, index) => val === index));
+            selectedIndex = null;
+            updateGridUI();
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            secondsPassed = 0;
+            timerInterval = setInterval(() => {
+                secondsPassed++;
+                const m = String(Math.floor(secondsPassed / 60)).padStart(2, '0');
+                const s = String(secondsPassed % 60).padStart(2, '0');
+                document.getElementById('timer').innerText = `⏱️ ${m}:${s}`;
+            }, 1000);
+        }
+
+        function triggerHint() {
+            triggerHaptic('tap');
+            const hintOverlay = document.getElementById('hint-overlay');
+            hintOverlay.style.backgroundImage = `url('${imageName}')`;
+            hintOverlay.style.display = 'block';
+            setTimeout(() => { hintOverlay.style.display = 'none'; }, 2500);
+        }
+
+        function updateXPDisplays() {
+            let totalXP = 0;
+            for (let l = 1; l <= 5; l++) {
+                for (let g of [3, 4, 5]) {
+                    totalXP += parseInt(localStorage.getItem(`xp_lvl_${l}_grid_${g}`)) || 0;
+                }
+            }
+            let currentLvlXP = parseInt(localStorage.getItem(`xp_lvl_${currentLevel}_grid_${gridSize}`)) || 0;
+            document.getElementById('levelScore').innerText = `🎯 Lvl XP: ${currentLvlXP}`;
+            document.getElementById('totalScore').innerText = `⭐ Total: ${totalXP}`;
+        }
+
+        function updateBestTimeDisplay() {
+            let best = localStorage.getItem(`best_time_lvl_${currentLevel}_grid_${gridSize}`);
+            if (best) {
+                const m = String(Math.floor(best / 60)).padStart(2, '0');
+                const s = String(best % 60).padStart(2, '0');
+                document.getElementById('bestTime').innerText = `🏆 Best: ${m}:${s}`;
+            } else {
+                document.getElementById('bestTime').innerText = `🏆 Best: --:--`;
+            }
+        }
+
+        function checkWin() {
+            if (currentOrder.every((val, index) => val === index)) {
+                clearInterval(timerInterval);
+                grid.classList.add('solved');
+                triggerHaptic('win');
+                confetti({ particleCount: 150, spread: 90 });
+
+                // حفظ الإنجاز العام للمرحلة لإتاحة الانتقال + حفظ الإنجاز الخاص بدرجة الصعوبة الحالية
+                localStorage.setItem(`lvl_${currentLevel}_completed`, 'true');
+                localStorage.setItem(`lvl_${currentLevel}_grid_${gridSize}_done`, 'true');
+
+                let currentBest = localStorage.getItem(`best_time_lvl_${currentLevel}_grid_${gridSize}`);
+                if (!currentBest || secondsPassed < parseInt(currentBest)) {
+                    localStorage.setItem(`best_time_lvl_${currentLevel}_grid_${gridSize}`, secondsPassed);
+                }
+
+                let basePoints = gridSize * 150;
+                let timeBonus = Math.max(10, 300 - secondsPassed * 2);
+                let moveBonus = Math.max(10, 200 - moves * 3);
+                let earnedXP = basePoints + timeBonus + moveBonus;
+
+                let prevXP = parseInt(localStorage.getItem(`xp_lvl_${currentLevel}_grid_${gridSize}`)) || 0;
+                if (earnedXP > prevXP) {
+                    localStorage.setItem(`xp_lvl_${currentLevel}_grid_${gridSize}`, earnedXP);
+                }
+
+                const rankInfo = difficultyTitles[gridSize];
+                document.getElementById('rankBadgeIcon').innerText = rankInfo.icon;
+                document.getElementById('rankTitle').innerText = rankInfo.title;
+                document.getElementById('pointsEarned').innerText = `+${earnedXP} XP EARNED FOR THIS LEVEL!`;
+                document.getElementById('winStats').innerText = `⏱️ Time: ${secondsPassed}s | 👆 Moves: ${moves}`;
+                
+                winBox.style.display = 'block';
+                updateFlightMap();
+            }
+        }
+
+        /* ========================================================
+           3. INITIALIZATION & SECURITY RUNTIME
+        ======================================================== */
+        if (!isValidLink) {
+            triggerAccessDenied();
+        } else {
+            document.getElementById('levelTitle').innerText = `Level ${currentLevel}: Mission ${currentLevel} 🧩`;
+            loadAndSetImage();
+
+            if (shouldShowLockOnStart) {
+                showLockModal();
+            }
+        }
+    </script>
+</body>
+</html>
