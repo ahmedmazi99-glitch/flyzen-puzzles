@@ -354,7 +354,7 @@
 </head>
 <body oncontextmenu="return false;">
 
-    <div class="card">
+    <div class="card" id="mainCard">
         <div class="flight-map-container">
             <div class="map-title" id="mapTitle">FLYZEN MISSION PATH</div>
             <div class="flight-path" id="flightPath">
@@ -431,9 +431,29 @@
 
     <script>
         /* ========================================================
-           1. CYBERSECURITY & ANTI-ESPIONAGE SHIELD
+           1. CYBERSECURITY & STRICT ACCESS CONTROL (PASSCODE ONLY)
         ======================================================== */
-        // Block Inspect Element, View Source, and Save Shortcuts
+        // الرموز العشوائية المعتمدة حصراً (أي رابط آخر سيتم حظره تماماً)
+        const ALLOWED_PASSCODES = {
+            'a8f3k': 1,
+            'b7x9m': 2,
+            'k4p2w': 3,
+            'q9r1z': 4,
+            'v3t8y': 5
+        };
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const codeParam = urlParams.get('p');
+
+        let isValidLink = false;
+        let requestedLevel = null;
+
+        if (codeParam && ALLOWED_PASSCODES.hasOwnProperty(codeParam)) {
+            isValidLink = true;
+            requestedLevel = ALLOWED_PASSCODES[codeParam];
+        }
+
+        // تعطيل أدوات الفحص، F12، والنسخ
         document.addEventListener('keydown', (e) => {
             if (
                 e.key === 'F12' ||
@@ -444,19 +464,15 @@
                 e.stopPropagation();
                 return false;
             }
-            
-            // Clear clipboard on PrintScreen key press
             if (e.key === 'PrintScreen') {
                 navigator.clipboard.writeText('');
-                alert('Screenshots are disabled on this application for copyright protection.');
             }
         });
 
-        // Disable Context Menu & Image Dragging
         document.addEventListener('contextmenu', (e) => e.preventDefault());
         document.addEventListener('dragstart', (e) => e.preventDefault());
 
-        // Anti-Screen Capture / Blur UI when switching windows or taking background snapshots
+        // التعتيم الأمني عند الانتقال أو تصوير المعاينة
         window.addEventListener('blur', () => document.body.classList.add('security-blur'));
         window.addEventListener('focus', () => document.body.classList.remove('security-blur'));
         document.addEventListener('visibilitychange', () => {
@@ -468,25 +484,8 @@
         });
 
         /* ========================================================
-           2. GAME LOGIC & STRICT SEQUENTIAL UNLOCK SYSTEM
+           2. STRICT SEQUENTIAL UNLOCK & GAME ENGINE
         ======================================================== */
-        const LEVEL_PASSCODES = {
-            'a8f3k': 1,
-            'b7x9m': 2,
-            'k4p2w': 3,
-            'q9r1z': 4,
-            'v3t8y': 5
-        };
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const codeParam = urlParams.get('p');
-        const directLvlParam = parseInt(urlParams.get('lvl'));
-
-        let requestedLevel = LEVEL_PASSCODES[codeParam] || directLvlParam || 1;
-        if (isNaN(requestedLevel) || requestedLevel < 1 || requestedLevel > 5) {
-            requestedLevel = 1;
-        }
-
         function getHighestUnlockedLevel() {
             let unlocked = 1;
             for (let i = 1; i < 5; i++) {
@@ -500,7 +499,7 @@
         }
 
         let maxUnlockedLevel = getHighestUnlockedLevel();
-        let currentLevel = requestedLevel;
+        let currentLevel = requestedLevel || 1;
         let shouldShowLockOnStart = false;
 
         if (requestedLevel > maxUnlockedLevel) {
@@ -528,6 +527,20 @@
         let selectedIndex = null;
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function triggerAccessDenied() {
+            const modal = document.getElementById('lockModal');
+            const modalContent = modal.querySelector('.modal-content');
+            modalContent.innerHTML = `
+                <div style="font-size: 50px; margin-bottom: 8px;">⛔🔒</div>
+                <h3 style="color: #EF4444; margin: 0 0 8px 0; font-size: 18px;">Access Denied / رابط غير صالح</h3>
+                <p style="color: #475569; font-size: 12px; line-height: 1.5; margin-bottom: 16px;">
+                    عذراً، هذا الرابط قديم أو غير مسموح به! يرجى استخدام <b>QR Code المعتمد</b> المطبوع في الكتاب للوصول إلى اللعبة.
+                </p>
+            `;
+            modal.style.display = 'flex';
+            document.getElementById('mainCard').style.display = 'none';
+        }
 
         function playSound(type) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -870,11 +883,18 @@
             }
         }
 
-        document.getElementById('levelTitle').innerText = `Level ${currentLevel}: Mission ${currentLevel} 🧩`;
-        loadAndSetImage();
+        /* ========================================================
+           3. INITIALIZATION & ACCESS CONTROL VERIFICATION
+        ======================================================== */
+        if (!isValidLink) {
+            triggerAccessDenied();
+        } else {
+            document.getElementById('levelTitle').innerText = `Level ${currentLevel}: Mission ${currentLevel} 🧩`;
+            loadAndSetImage();
 
-        if (shouldShowLockOnStart) {
-            showLockModal();
+            if (shouldShowLockOnStart) {
+                showLockModal();
+            }
         }
     </script>
 </body>
